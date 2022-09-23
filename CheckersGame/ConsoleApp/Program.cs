@@ -1,3 +1,7 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using MenuSystem;
 
 Console.WriteLine("Hello, World!");
+
+var mainMenu = new Menu(EMenuLevel.Main, "Main Menu", null);
+
+mainMenu.RunForUserInput();

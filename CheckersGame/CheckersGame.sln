@@ -2,6 +2,13 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp", "ConsoleApp\ConsoleApp.csproj", "{C4A4026D-8642-4883-843A-E50390E76D2B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MenuSystem", "MenuSystem\MenuSystem.csproj", "{5C9E4E6D-D632-4FE8-98A6-B5587BCBFED8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3EE86308-D65B-41B2-9C0B-03666E5393BF}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +19,9 @@ Global
 		{C4A4026D-8642-4883-843A-E50390E76D2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4A4026D-8642-4883-843A-E50390E76D2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4A4026D-8642-4883-843A-E50390E76D2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C9E4E6D-D632-4FE8-98A6-B5587BCBFED8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C9E4E6D-D632-4FE8-98A6-B5587BCBFED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C9E4E6D-D632-4FE8-98A6-B5587BCBFED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C9E4E6D-D632-4FE8-98A6-B5587BCBFED8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
