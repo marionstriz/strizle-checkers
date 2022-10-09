@@ -1,21 +1,19 @@
-﻿using System.Security.AccessControl;
-
-namespace MenuSystem;
+﻿namespace MenuSystem;
 
 public class MenuItem
 {
-    private string Shortcut { get; }
-    private string Title { get; }
-    private Action? MethodToRun { get; }
+    public string Shortcut { get; }
+    private readonly string _title;
+    private readonly Func<string>? _methodToRun;
 
-    public MenuItem(string shortcut, string title, Action? methodToRun)
+    public MenuItem(string shortcut, string title, Func<string>? methodToRun)
     {
         Shortcut = shortcut;
-        Title = title;
-        MethodToRun = methodToRun;
+        _title = title;
+        _methodToRun = methodToRun;
     }
 
-    public void RunAction() => MethodToRun?.Invoke();
+    public string? RunMethod() => _methodToRun?.Invoke();
 
-    public override string ToString() => $"({Shortcut}) {Title}";
+    public override string ToString() => $"({Shortcut}) {_title}";
 }

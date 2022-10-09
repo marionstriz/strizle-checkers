@@ -1,38 +1,38 @@
-using System.Security.AccessControl;
+using System.Collections.ObjectModel;
 
 namespace MenuSystem;
 
 public class Menu
 {
-    private readonly EMenuLevel _level;
-    private readonly string _title;
+    public EMenuLevel Level { get; }
+    public string Title { get; }
     private readonly List<MenuItem> _menuItems = new();
+    private readonly HashSet<string> _shortcuts = new();
+    public ReadOnlyCollection<MenuItem> MenuItems => _menuItems.AsReadOnly();
 
     public Menu(EMenuLevel level, string title, List<MenuItem>? items)
     {
-        _level = level;
-        _title = title;
-        AddAllMenuItems(items);
+        Level = level;
+        Title = title;
+        try
+        {
+            AddAllMenuItems(items);
+        }
+        catch (ArgumentException e)
+        {
+            throw new ArgumentException($"Unable to create menu. {e.Message}");
+        }
     }
 
-    public string RunForUserInput()
+    public string? ProcessInput(string input)
     {
-        string userInput;
-        
-        Console.WriteLine(_title);
-        Console.WriteLine("=====================");
+        var menuItem = GetMenuItemWithShortcut(input);
 
-        foreach (var item in _menuItems)
+        if (menuItem == null)
         {
-            Console.WriteLine(item);
+            throw new ArgumentException($"No menu item with shortcut '{input}' in {Title}");
         }
-        
-        Console.WriteLine("---------------------");
-        
-        Console.Write("Your choice: ");
-        userInput = Console.ReadLine()?.ToUpper().Trim() ?? "";
-        
-        return userInput;
+        return !IsBaseMenuItem(menuItem) ? menuItem.RunMethod() : input;
     }
 
     private void AddAllMenuItems(List<MenuItem>? items)
@@ -48,20 +48,43 @@ public class Menu
     {
         foreach (var item in items)
         {
-            _menuItems.Add(item);
+            AddMenuItemAndShortcut(item);
         }
     }
 
     private void AddBaseMenuItems()
     {
-        if (_level.Equals(EMenuLevel.MoreThanSecond))
+        if (Level.Equals(EMenuLevel.MoreThanSecond))
         {
-            _menuItems.Add(new MenuItem("R", "Return", null));
+            AddMenuItemAndShortcut(new MenuItem("R", "Return", null));
         }
-        if (!_level.Equals(EMenuLevel.Main))
+        if (!Level.Equals(EMenuLevel.Main))
         {
-            _menuItems.Add(new MenuItem("M", "Main Menu", null));
+            AddMenuItemAndShortcut(new MenuItem("M", "Main Menu", null));
         }
-        _menuItems.Add(new MenuItem("X", "Exit", null));
+        AddMenuItemAndShortcut(new MenuItem("X", "Exit", null));
+    }
+
+    private void AddMenuItemAndShortcut(MenuItem menuItem)
+    {
+        if (!_shortcuts.Add(menuItem.Shortcut))
+        {
+            throw new ArgumentException($"Menu item shortcut '{menuItem.Shortcut}' already in use.");
+        }
+        _menuItems.Add(menuItem);
+    }
+
+    private MenuItem? GetMenuItemWithShortcut(string shortcut)
+    {
+        return _menuItems.FirstOrDefault(menuItem => menuItem.Shortcut.Equals(shortcut));
+    }
+
+    private bool IsBaseMenuItem(MenuItem menuItem)
+    {
+        if (Level.Equals(EMenuLevel.MoreThanSecond) && menuItem.Shortcut.Equals("R")
+            || !Level.Equals(EMenuLevel.Main) && menuItem.Shortcut.Equals("M")) {
+            return true;
+        }
+        return menuItem.Shortcut.Equals("X");
     }
 }
