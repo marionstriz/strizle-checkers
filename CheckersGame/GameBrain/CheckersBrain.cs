@@ -2,10 +2,10 @@
 
 public class CheckersBrain
 {
-    private Board.Board _gameBoard;
+    public Board.Board Board { get; }
     
     public CheckersBrain(int boardWidth = 8, int boardHeight = 8)
     {
-        _gameBoard = new Board.Board(boardWidth, boardHeight);
+        Board = new Board.Board(boardWidth, boardHeight);
     }
 }

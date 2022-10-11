@@ -34,6 +34,15 @@ public class Menu
         }
         return !IsBaseMenuItem(menuItem) ? menuItem.RunMethod() : input;
     }
+    
+    public bool IsBaseMenuItem(MenuItem menuItem)
+    {
+        if (Level.Equals(EMenuLevel.MoreThanSecond) && menuItem.Equals(GetMenuItemWithShortcut("R"))
+            || !Level.Equals(EMenuLevel.Main) && menuItem.Equals(GetMenuItemWithShortcut("M"))) {
+            return true;
+        }
+        return menuItem.Equals(GetMenuItemWithShortcut("X"));
+    }
 
     private void AddAllMenuItems(List<MenuItem>? items)
     {
@@ -77,14 +86,5 @@ public class Menu
     private MenuItem? GetMenuItemWithShortcut(string shortcut)
     {
         return _menuItems.FirstOrDefault(menuItem => menuItem.Shortcut.Equals(shortcut));
-    }
-
-    private bool IsBaseMenuItem(MenuItem menuItem)
-    {
-        if (Level.Equals(EMenuLevel.MoreThanSecond) && menuItem.Shortcut.Equals("R")
-            || !Level.Equals(EMenuLevel.Main) && menuItem.Shortcut.Equals("M")) {
-            return true;
-        }
-        return menuItem.Shortcut.Equals("X");
     }
 }
