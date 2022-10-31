@@ -1,6 +1,5 @@
 using System.Text;
 using GameBrain;
-using GameBrain.Board;
 
 namespace ConsoleUI;
 
@@ -22,62 +21,93 @@ public class BrainUI
 
     public string PrintBoard()
     {
+        var playerOne = _brain.Board.PlayerOne;
+        var playerTwo = _brain.Board.PlayerTwo;
+        
         Console.Clear();
         WriteBoardAlphaCoordinates();
+
         var squares = _brain.Board.Squares;
         var rowCount = squares.GetLength(0);
+        var columnCount = squares.GetLength(1);
+
         for (var i = rowCount; i > 0; i--)
         {
-            Console.ResetColor();
-            Console.ForegroundColor = _base.MainColor;
-            Console.Write((i == rowCount && i > 9 ? "" : " ") +
-                          (i == rowCount ? i : i + 1) + 
-                          (i != rowCount && i > 8 ? "" : " "));
-            if (i < rowCount)
+            for (int k = 0; k < 3; k++)
             {
-                Console.Write($"\n{(i > 9 ? "" : " ")}{i} ");
-            } 
-            for (var j = 0; j < squares.GetLength(1); j++)
-            {
-                var square = squares[rowCount - i, j];
-                if (i % 2 == 0 && j % 2 == 1 ||
-                    i % 2 == 1 && j % 2 == 0)
+                if (k != 1)
                 {
-                    Console.BackgroundColor = BoardPrimarySquareColor;
+                    Console.Write("   ");
                 }
-                else
+                if (k == 1)
                 {
-                    Console.BackgroundColor = BoardSecondarySquareColor;
+                    WriteLeftNumericCoordinate(rowCount, i);
+                }
+                for (var j = 0; j < columnCount; j++)
+                {
+                    var coords = new SquareCoordinates(Board.AlphabetChars[j], rowCount - i);
+                    var square = squares[rowCount - i, j];
+                    
+                    Console.BackgroundColor = Board.IsButtonSquare(coords) ?
+                        BoardPrimarySquareColor : BoardSecondarySquareColor;
+                    if (k == 1 && square.Button != null)
+                    {
+                        Console.ForegroundColor = square.Button.Color.Equals(EColor.White)
+                            ? PlayerOneButtonColor
+                            : PlayerTwoButtonColor;
+                        Console.Write("  ⬤   ");
+                    }
+                    else
+                    {
+                        Console.Write("      ");
+                    }
+                }
+                if (k == 1)
+                {
+                    WriteRightNumericCoordinate(rowCount, i);
                 }
 
-                Console.ForegroundColor = square.State.Equals(ESquareState.White) ?
-                    PlayerOneButtonColor : PlayerTwoButtonColor;
-                Console.Write(square.State.Equals(ESquareState.Empty) ? "  " : "()");
+                Console.WriteLine();
+                Console.ResetColor();
             }
         }
         Console.ResetColor();
         Console.ForegroundColor = _base.MainColor;
-        Console.Write($" 1 \n");
-        WriteBoardAlphaCoordinates();
         
-        Console.Write("\nYour choice: ");
+        WriteBoardAlphaCoordinates();
+        Console.WriteLine();
+        
+        Console.Write("Your choice: ");
         Console.ReadLine();
         return "";
+    }
+
+    private void WriteLeftNumericCoordinate(int boardHeight, int currentIndex) =>
+        WriteBoardNumericCoordinate(boardHeight, currentIndex, true);
+    
+    private void WriteRightNumericCoordinate(int boardHeight, int currentIndex) =>
+        WriteBoardNumericCoordinate(boardHeight, currentIndex, false);
+
+    private void WriteBoardNumericCoordinate(int boardHeight, int currentIndex, bool isLeft)
+    {
+        Console.ResetColor();
+        Console.ForegroundColor = _base.MainColor;
+        Console.Write((isLeft && currentIndex > 9 ? "" : " ") + currentIndex + " ");
     }
 
     private void WriteBoardAlphaCoordinates()
     {
         Console.ForegroundColor = _base.MainColor;
-        StringBuilder sb = new StringBuilder();
-        Board board = _brain.Board;
-
+        
+        var sb = new StringBuilder();
         sb.Append("   ");
-        for (int i = 0; i < board.Squares.GetLength(1); i++)
+        
+        for (var i = 0; i < _brain.Board.Squares.GetLength(1); i++)
         {
-            sb.Append($"{board.AlphabetChars[i]} ");
+            sb.Append($"   {Board.AlphabetChars[i]}  ");
         }
 
         sb.Append("   ");
-        Console.WriteLine(sb.ToString());
+        Console.WriteLine(sb);
     }
 }

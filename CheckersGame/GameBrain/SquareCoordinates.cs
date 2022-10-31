@@ -1,4 +1,4 @@
-namespace GameBrain.Board;
+namespace GameBrain;
 
 public struct SquareCoordinates
 {

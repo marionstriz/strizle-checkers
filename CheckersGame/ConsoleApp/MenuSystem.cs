@@ -1,5 +1,6 @@
 using MenuSystem;
 using ConsoleUI;
+using GameBrain;
 
 namespace ConsoleApp;
 
@@ -13,11 +14,20 @@ public class MenuSystem
     {
         _ui = ui;
 
+        var gameOptions = new GameOptions();
+        var customOptionsMenu = new Menu(EMenuLevel.MoreThanSecond, "Custom Options",
+            new List<MenuItem>
+            {
+                new("B", $"Set new board size", () => ui.BoardSizePrompt(gameOptions)),
+                new("P", "Current starting player: Player 1. Select to change", null),
+                new("A", "Compulsory jumps: on. Select to change", null),
+            });
+            
         var boardSelectMenu = new Menu(EMenuLevel.MoreThanSecond, "Select Board",
             new List<MenuItem>
             {
-                new ("8", "8 x 8", () => ui.StartNewGame(8, 8)),
-                new ("10", "10 x 10", () => ui.StartNewGame(10, 10))
+                new ("D", "Default Options", () => ui.StartNewGame(gameOptions)),
+                new ("C", "Custom Options", () => ui.RunMenuForUserInput(customOptionsMenu))
             });
         var startMenu = new Menu(EMenuLevel.Second, "Start Menu",
             new List<MenuItem>

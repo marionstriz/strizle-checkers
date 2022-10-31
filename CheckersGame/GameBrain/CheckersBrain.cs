@@ -2,10 +2,12 @@
 
 public class CheckersBrain
 {
-    public Board.Board Board { get; }
-    
-    public CheckersBrain(int boardWidth = 8, int boardHeight = 8)
+    public GameOptions GameOptions { get; }
+    public Board Board { get; }
+
+    public CheckersBrain(GameOptions gameOptions)
     {
-        Board = new Board.Board(boardWidth, boardHeight);
+        GameOptions = gameOptions;
+        Board = new Board(gameOptions.Width, gameOptions.Height);
     }
 }
