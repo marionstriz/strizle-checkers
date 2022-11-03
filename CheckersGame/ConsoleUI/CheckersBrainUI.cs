@@ -45,7 +45,7 @@ public class CheckersBrainUI
                 }
                 for (var j = 0; j < columnCount; j++)
                 {
-                    var coords = new SquareCoordinates(Board.AlphabetChars[j], rowCount - i);
+                    var coords = new SquareCoordinates(Board.AlphabetChars[j], i);
                     var square = squares[rowCount - i, j];
                     
                     Console.BackgroundColor = _brain.Board.IsButtonSquare(coords) ?
