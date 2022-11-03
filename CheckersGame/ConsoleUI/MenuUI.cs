@@ -4,9 +4,10 @@ namespace ConsoleUI;
 
 public class MenuUI
 {
-    private readonly BaseUI _base;
+    private readonly CheckersUIController _base;
+    public bool ClearConsole { get; set; } = true;
     
-    public MenuUI(BaseUI b)
+    public MenuUI(CheckersUIController b)
     {
         _base = b;
     }
@@ -49,7 +50,14 @@ public class MenuUI
                 if (menuOutput.Equals("") 
                     || menu.Level.Equals(EMenuLevel.Main) && menuOutput.Equals("M"))
                 {
-                    Console.Clear();
+                    if (ClearConsole)
+                    {
+                        Console.Clear();
+                    }
+                    else
+                    {
+                        ClearConsole = true;
+                    }
                     continue;
                 } 
                 if (menu.Level.Equals(EMenuLevel.MoreThanSecond) && menuOutput.Equals("R"))

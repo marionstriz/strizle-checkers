@@ -6,8 +6,8 @@ public class Menu
 {
     public EMenuLevel Level { get; }
     public string Title { get; }
-    private readonly List<MenuItem> _menuItems = new();
-    private readonly HashSet<string> _shortcuts = new();
+    private List<MenuItem> _menuItems = new();
+    private HashSet<string> _shortcuts = new();
     public ReadOnlyCollection<MenuItem> MenuItems => _menuItems.AsReadOnly();
 
     public Menu(EMenuLevel level, string title, List<MenuItem>? items)
@@ -22,6 +22,12 @@ public class Menu
         {
             throw new ArgumentException($"Unable to create menu. {e.Message}");
         }
+    }
+
+    public Menu(EMenuLevel level, string title)
+    {
+        Level = level;
+        Title = title;
     }
 
     public string? ProcessInput(string input)
@@ -42,6 +48,13 @@ public class Menu
             return true;
         }
         return menuItem.Equals(GetMenuItemWithShortcut("X"));
+    }
+
+    public void NewMenuItems(List<MenuItem>? items)
+    {
+        _menuItems = new List<MenuItem>();
+        _shortcuts = new HashSet<string>();
+        AddAllMenuItems(items);
     }
 
     private void AddAllMenuItems(List<MenuItem>? items)

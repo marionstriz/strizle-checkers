@@ -3,17 +3,17 @@ using GameBrain;
 
 namespace ConsoleUI;
 
-public class BrainUI
+public class CheckersBrainUI
 {
     public ConsoleColor BoardPrimarySquareColor => ConsoleColor.Gray;
     public ConsoleColor BoardSecondarySquareColor => ConsoleColor.White;
     public ConsoleColor PlayerOneButtonColor => ConsoleColor.White;
     public ConsoleColor PlayerTwoButtonColor => ConsoleColor.Black;
     
-    private readonly BaseUI _base;
+    private readonly CheckersUIController _base;
     private readonly CheckersBrain _brain;
 
-    public BrainUI(BaseUI b, CheckersBrain brain)
+    public CheckersBrainUI(CheckersUIController b, CheckersBrain brain)
     {
         _base = b;
         _brain = brain;
@@ -48,7 +48,7 @@ public class BrainUI
                     var coords = new SquareCoordinates(Board.AlphabetChars[j], rowCount - i);
                     var square = squares[rowCount - i, j];
                     
-                    Console.BackgroundColor = Board.IsButtonSquare(coords) ?
+                    Console.BackgroundColor = _brain.Board.IsButtonSquare(coords) ?
                         BoardPrimarySquareColor : BoardSecondarySquareColor;
                     if (k == 1 && square.Button != null)
                     {

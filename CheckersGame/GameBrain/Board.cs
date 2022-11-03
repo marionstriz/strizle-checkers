@@ -37,13 +37,10 @@ public class Board
                 {
                     if (i + 1 < height / 2)
                     {
-                        Console.WriteLine("white button line");
                         PlayerOne.AddButton(new Button(
                             PlayerOne.Color, EButtonState.OnBoard, square));
                     } else if (i + 1 > height / 2 + 1)
                     {
-                        Console.WriteLine("black button line");
-
                         PlayerTwo.AddButton(new Button(
                             PlayerTwo.Color, EButtonState.OnBoard, square));
                     }
@@ -52,7 +49,7 @@ public class Board
         }
     }
 
-    public static bool IsButtonSquare(SquareCoordinates coords)
+    public bool IsButtonSquare(SquareCoordinates coords)
     {
         return coords.X % 2 == 0 && coords.Y % 2 == 1
                || coords.X % 2 == 1 && coords.Y % 2 == 0;

@@ -3,17 +3,18 @@ using MenuSystem;
 
 namespace ConsoleUI;
 
-public class BaseUI
+public class CheckersUIController
 {
     public ConsoleColor MainColor => ConsoleColor.Blue;
     public ConsoleColor TitleColor => ConsoleColor.DarkCyan;
     public ConsoleColor FillerColor => ConsoleColor.DarkBlue;
     public ConsoleColor ErrorColor => ConsoleColor.Red;
+    public ConsoleColor YaaasColor => ConsoleColor.Green;
 
     private readonly MenuUI _menuUI;
-    private BrainUI? _brainUI;
+    private CheckersBrainUI? _brainUI;
 
-    public BaseUI()
+    public CheckersUIController()
     {
         _menuUI = new MenuUI(this);
     }
@@ -22,11 +23,11 @@ public class BaseUI
 
     public string StartNewGame(GameOptions gameOptions)
     {
-        _brainUI = new BrainUI(this, new CheckersBrain(gameOptions));
+        _brainUI = new CheckersBrainUI(this, new CheckersBrain(gameOptions));
         return _brainUI.PrintBoard();
     }
 
-    public string BoardSizePrompt(GameOptions gameOptions)
+    public string BoardSizePrompt(GameOptions options)
     {
         bool done = false;
         
@@ -51,15 +52,39 @@ public class BaseUI
             {
                 continue;
             }
-            gameOptions.Height = height.Value;
-            gameOptions.Width = width.Value;
+            options.Height = height.Value;
+            options.Width = width.Value;
+            Console.Clear();
+            Console.ForegroundColor = YaaasColor;
+            Console.WriteLine($"Board size is now {options.Height}x{options.Width}");
+            _menuUI.ClearConsole = false;
             done = true;
         }
 
         return "";
     }
 
-    public int? TryParseBoardDimension(string? input)
+    public string SwitchStartingPlayer(GameOptions options)
+    {
+        Console.Clear();
+        Console.ForegroundColor = YaaasColor;
+        options.PlayerOneStarts = !options.PlayerOneStarts;
+        Console.WriteLine($"Starting player changed to Player {(options.PlayerOneStarts ? "1" : "2")}");
+        _menuUI.ClearConsole = false;
+        return "";
+    }
+    
+    public string SwitchCompulsoryJumps(GameOptions options)
+    {
+        Console.Clear();
+        Console.ForegroundColor = YaaasColor;
+        options.CompulsoryJumps = !options.CompulsoryJumps;
+        Console.WriteLine($"Compulsory jumps {(options.CompulsoryJumps ? "activated" : "deactivated")}");
+        _menuUI.ClearConsole = false;
+        return "";
+    }
+
+    private int? TryParseBoardDimension(string? input)
     {
         if (input == null)
         {
@@ -86,5 +111,5 @@ public class BaseUI
 
         return inputInt;
     }
-    
+
 }
