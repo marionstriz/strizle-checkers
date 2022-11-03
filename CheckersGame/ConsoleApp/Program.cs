@@ -1,4 +1,4 @@
-﻿var ui = new ConsoleUI.CheckersUIController();
+﻿var ui = new ConsoleUI.UIController();
 var menuSystem = new ConsoleApp.MenuSystem(ui);
 
 menuSystem.RunMainMenu();

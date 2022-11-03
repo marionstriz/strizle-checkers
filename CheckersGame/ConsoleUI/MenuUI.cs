@@ -4,10 +4,10 @@ namespace ConsoleUI;
 
 public class MenuUI
 {
-    private readonly CheckersUIController _base;
+    private readonly UIController _base;
     public bool ClearConsole { get; set; } = true;
     
-    public MenuUI(CheckersUIController b)
+    public MenuUI(UIController b)
     {
         _base = b;
     }

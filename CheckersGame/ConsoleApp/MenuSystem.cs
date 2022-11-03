@@ -6,50 +6,54 @@ namespace ConsoleApp;
 
 public class MenuSystem
 {
-    private readonly CheckersUIController _ui;
+    private readonly UIController _ui;
     
-    private Menu CustomOptionsMenu = new Menu(EMenuLevel.MoreThanSecond, "Custom Options");
-    
-    private readonly Menu _mainMenu;
+    private readonly Menu _customOptionsMenu = new(EMenuLevel.MoreThanSecond, "Custom Options");
+    private readonly Menu _boardSelectMenu = new(EMenuLevel.MoreThanSecond, "Select Board");
+    private readonly Menu _startMenu = new(EMenuLevel.Second, "Start Menu");
 
-    public MenuSystem(CheckersUIController ui)
+    private readonly Menu _mainMenu = new(EMenuLevel.Main, "   _____ _               _                 \n" +
+                                                                "  / ____| |             | |                \n" +
+                                                                " | |    | |__   ___  ___| | _____ _ __ ___ \n" +
+                                                                " | |    | '_ \\ / _ \\/ __| |/ / _ \\ '__/ __|\n" +
+                                                                " | |____| | | |  __/ (__|   <  __/ |  \\__ \\\n" +
+                                                                "  \\_____|_| |_|\\___|\\___|_|\\_\\___|_|  |___/");
+
+    public MenuSystem(UIController ui)
     {
         _ui = ui;
-
-        var gameOptions = new GameOptions();
-        CustomOptionsMenu.NewMenuItems(new List<MenuItem>
-        {
-            new("B", $"Set new board size", () => ui.BoardSizePrompt(gameOptions)),
-            new("P", "Change current starting player", () => ui.SwitchStartingPlayer(gameOptions)),
-            new("A", "Change compulsory jump settings", () => ui.SwitchCompulsoryJumps(gameOptions)),
-            new("S", "Start Game", () => ui.StartNewGame(gameOptions))
-        });
-
-        var boardSelectMenu = new Menu(EMenuLevel.MoreThanSecond, "Select Board",
-            new List<MenuItem>
-            {
-                new ("D", "Default Options", () => ui.StartNewGame(gameOptions)),
-                new ("C", "Custom Options", () => ui.RunMenuForUserInput(CustomOptionsMenu))
-            });
-        var startMenu = new Menu(EMenuLevel.Second, "Start Menu",
-            new List<MenuItem>
-            {
-                new ("N", "New Game", () => ui.RunMenuForUserInput(boardSelectMenu))
-            });
-        _mainMenu = new Menu(EMenuLevel.Main, "   _____ _               _                 \n" +
-                                              "  / ____| |             | |                \n" +
-                                              " | |    | |__   ___  ___| | _____ _ __ ___ \n" +
-                                              " | |    | '_ \\ / _ \\/ __| |/ / _ \\ '__/ __|\n" +
-                                              " | |____| | | |  __/ (__|   <  __/ |  \\__ \\\n" +
-                                              "  \\_____|_| |_|\\___|\\___|_|\\_\\___|_|  |___/", 
-            new List<MenuItem>
-            {
-                new ("S", "Start", () => _ui.RunMenuForUserInput(startMenu))
-            });
+        AddMenuItems();
     }
 
     public void RunMainMenu()
     {
-        _ui.RunMenuForUserInput(_mainMenu);
+        _ui.Menu.RunMenuForUserInput(_mainMenu);
+    }
+
+    private void AddMenuItems()
+    {
+        _customOptionsMenu.NewMenuItems(new List<MenuItem>
+        {
+            new("B", $"Set new board size", _ui.Options.BoardSizePrompt),
+            new("P", "Change current starting player", _ui.Options.SwitchStartingPlayer),
+            new("A", "Change compulsory jump settings", _ui.Options.SwitchCompulsoryJumps),
+            new("S", "Start Game", () => _ui.StartGame(_ui.Options.Options))
+        });
+        
+        _boardSelectMenu.NewMenuItems(new List<MenuItem>
+        {
+            new ("D", "Default Options", () => _ui.StartGame(new GameOptions())),
+            new ("C", "Custom Options", () => _ui.StartCustomOptions(_customOptionsMenu))
+        });
+
+        _startMenu.NewMenuItems(new List<MenuItem>
+        {
+            new ("N", "New Game", () => _ui.Menu.RunMenuForUserInput(_boardSelectMenu))
+        });
+        
+        _mainMenu.NewMenuItems(new List<MenuItem>
+        {
+            new ("S", "Start", () => _ui.Menu.RunMenuForUserInput(_startMenu))
+        });
     }
 }

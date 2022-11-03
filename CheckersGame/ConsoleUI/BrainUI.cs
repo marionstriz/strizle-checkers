@@ -3,17 +3,17 @@ using GameBrain;
 
 namespace ConsoleUI;
 
-public class CheckersBrainUI
+public class BrainUI
 {
     public ConsoleColor BoardPrimarySquareColor => ConsoleColor.Gray;
     public ConsoleColor BoardSecondarySquareColor => ConsoleColor.White;
     public ConsoleColor PlayerOneButtonColor => ConsoleColor.White;
     public ConsoleColor PlayerTwoButtonColor => ConsoleColor.Black;
     
-    private readonly CheckersUIController _base;
+    private readonly UIController _base;
     private readonly CheckersBrain _brain;
 
-    public CheckersBrainUI(CheckersUIController b, CheckersBrain brain)
+    public BrainUI(UIController b, CheckersBrain brain)
     {
         _base = b;
         _brain = brain;
