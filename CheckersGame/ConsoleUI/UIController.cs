@@ -13,18 +13,24 @@ public class UIController
 
     public MenuUI Menu { get; }
     public OptionsUI Options { get; }
-    private BrainUI? _brainUI;
+    public BrainUI Brain { get; private set; }
 
     public UIController()
     {
+        var options = new GameOptions();
         Menu = new MenuUI(this);
-        Options = new OptionsUI(this, new GameOptions());
+        Options = new OptionsUI(this, options);
+        Brain = new BrainUI(this, new CheckersBrain(options));
     }
 
-    public string StartGame(GameOptions options)
+    public void NewGame(GameOptions options)
     {
-        _brainUI = new BrainUI(this, new CheckersBrain(options));
-        return _brainUI.PrintBoard();
+        Brain = new BrainUI(this, new CheckersBrain(options));
+    }
+
+    public void LoadGame(CheckersBrain brain)
+    {
+        Brain = new BrainUI(this, brain);
     }
 
     public string StartCustomOptions(Menu optionsMenu)
@@ -47,4 +53,10 @@ public class UIController
         Console.ForegroundColor = ErrorColor;
         Console.WriteLine(error);
     }
+
+    public CheckersBrain GetBrain() => Brain.Brain;
+
+    public GameOptions GetOptions() => Options.Options;
+
+    public string PrintBrainBoard() => Brain.PrintBoard();
 }

@@ -1,4 +1,3 @@
-﻿var ui = new ConsoleUI.UIController();
-var menuSystem = new ConsoleApp.MenuSystem(ui);
+﻿var menuSystem = new ConsoleApp.MenuSystem();
 
 menuSystem.RunMainMenu();

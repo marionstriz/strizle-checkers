@@ -10,4 +10,10 @@ public class CheckersBrain
         GameOptions = gameOptions;
         Board = new Board(gameOptions.Width, gameOptions.Height);
     }
+
+    public CheckersBrain(GameOptions options, Board board)
+    {
+        GameOptions = options;
+        Board = board;
+    }
 }

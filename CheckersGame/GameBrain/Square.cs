@@ -5,8 +5,8 @@ public class Square
     public SquareCoordinates Coordinates { get; }
     public Button? Button { get; set; }
 
-    public Square(SquareCoordinates coords)
+    public Square(SquareCoordinates coordinates)
     {
-        Coordinates = coords;
+        Coordinates = coordinates;
     }
 }

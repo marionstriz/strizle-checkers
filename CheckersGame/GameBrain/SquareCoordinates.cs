@@ -1,9 +1,9 @@
 namespace GameBrain;
 
-public struct SquareCoordinates
+public class SquareCoordinates
 {
-    public readonly char X;
-    public readonly int Y;
+    public char X { get; }
+    public int Y { get; }
     
     public SquareCoordinates(char x, int y)
     {

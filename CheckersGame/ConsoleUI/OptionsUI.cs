@@ -22,8 +22,15 @@ public class OptionsUI
         while (!done)
         {
             Console.ForegroundColor = _base.MainColor;
+            Console.WriteLine("Note that a bigger board size might not fit your screen.");
+            Console.WriteLine("'X' to exit.");
             Console.Write("Enter board height: ");
+            
             string? heightString = Console.ReadLine()?.Trim();
+            if (heightString != null && heightString.ToUpper().Equals("X"))
+            {
+                return "";
+            }
             
             int? height = TryParseBoardDimension(heightString);
             if (height == null)
@@ -33,7 +40,11 @@ public class OptionsUI
 
             Console.Write("Enter board width: ");
             string? widthString = Console.ReadLine()?.Trim();
-            
+            if (widthString != null && widthString.ToUpper().Equals("X"))
+            {
+                return "";
+            }
+
             int? width = TryParseBoardDimension(widthString);
             if (width == null)
             {
@@ -50,12 +61,14 @@ public class OptionsUI
 
     public string SwitchStartingPlayer()
     {
+        Options.PlayerOneStarts = !Options.PlayerOneStarts;
         _base.PrintSuccess($"Starting player changed to Player {(Options.PlayerOneStarts ? "1" : "2")}");
         return "";
     }
     
     public string SwitchCompulsoryJumps()
     {
+        Options.CompulsoryJumps = !Options.CompulsoryJumps;
         _base.PrintSuccess($"Compulsory jumps {(Options.CompulsoryJumps ? "activated" : "deactivated")}");
         return "";
     }

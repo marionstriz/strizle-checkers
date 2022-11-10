@@ -11,23 +11,21 @@ public class BrainUI
     public ConsoleColor PlayerTwoButtonColor => ConsoleColor.Black;
     
     private readonly UIController _base;
-    private readonly CheckersBrain _brain;
+    public CheckersBrain Brain { get; }
 
     public BrainUI(UIController b, CheckersBrain brain)
     {
         _base = b;
-        _brain = brain;
+        Brain = brain;
     }
 
     public string PrintBoard()
     {
-        var playerOne = _brain.Board.PlayerOne;
-        var playerTwo = _brain.Board.PlayerTwo;
-        
+        Console.WriteLine(GetHashCode());
         Console.Clear();
         WriteBoardAlphaCoordinates();
 
-        var squares = _brain.Board.Squares;
+        var squares = Brain.Board.Squares;
         var rowCount = squares.GetLength(0);
         var columnCount = squares.GetLength(1);
 
@@ -48,7 +46,7 @@ public class BrainUI
                     var coords = new SquareCoordinates(Board.AlphabetChars[j], i);
                     var square = squares[rowCount - i, j];
                     
-                    Console.BackgroundColor = _brain.Board.IsButtonSquare(coords) ?
+                    Console.BackgroundColor = Brain.Board.IsButtonSquare(coords) ?
                         BoardPrimarySquareColor : BoardSecondarySquareColor;
                     if (k == 1 && square.Button != null)
                     {
@@ -102,7 +100,7 @@ public class BrainUI
         var sb = new StringBuilder();
         sb.Append("   ");
         
-        for (var i = 0; i < _brain.Board.Squares.GetLength(1); i++)
+        for (var i = 0; i < Brain.Board.Squares.GetLength(1); i++)
         {
             sb.Append($"   {Board.AlphabetChars[i]}  ");
         }

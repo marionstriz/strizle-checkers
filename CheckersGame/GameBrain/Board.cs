@@ -20,6 +20,13 @@ public class Board
         InitializeBoard();
     }
 
+    public Board(Player one, Player two, Square[,] squares)
+    {
+        PlayerOne = one;
+        PlayerTwo = two;
+        Squares = squares;
+    }
+
     private void InitializeBoard()
     {
         int height = Squares.GetLength(0);
@@ -37,12 +44,14 @@ public class Board
                 {
                     if (i + 1 < height / 2)
                     {
-                        PlayerOne.AddButton(new Button(
-                            PlayerOne.Color, EButtonState.OnBoard, square));
+                        var button = new Button(PlayerOne.Color, EButtonState.OnBoard);
+                        PlayerOne.AddButton(button);
+                        square.Button = button;
                     } else if (i + 1 > height / 2 + 1)
                     {
-                        PlayerTwo.AddButton(new Button(
-                            PlayerTwo.Color, EButtonState.OnBoard, square));
+                        var button = new Button(PlayerTwo.Color, EButtonState.OnBoard);
+                        PlayerTwo.AddButton(button);
+                        square.Button = button;
                     }
                 }
             }
