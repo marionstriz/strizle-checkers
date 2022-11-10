@@ -1,12 +1,11 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace GameBrain.DTO;
 
 public class CheckersBrainDto
 {
-    public GameOptions Options { get; set; }
-    public BoardDto Board { get; set; }
+    public GameOptions Options { get; }
+    public BoardDto Board { get; }
 
     [JsonConstructor]
     public CheckersBrainDto(GameOptions options, BoardDto board)

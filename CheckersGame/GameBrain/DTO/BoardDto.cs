@@ -4,9 +4,9 @@ namespace GameBrain.DTO;
 
 public class BoardDto
 {
-    public Player PlayerOne { get; set; }
-    public Player PlayerTwo { get; set; }
-    public List<List<Square>> Squares { get; set; }
+    public Player PlayerOne { get; }
+    public Player PlayerTwo { get; }
+    public List<List<Square>> Squares { get; }
 
     [JsonConstructor]
     public BoardDto(Player playerOne, Player playerTwo, List<List<Square>> squares)
@@ -23,14 +23,12 @@ public class BoardDto
         var squares = board.Squares;
 
         Squares = new List<List<Square>>();
-        for (int j = 0; j < squares.GetLength(1); j++)
+        for (int i = 0; i < squares.GetLength(0); i++)
         {
-            for (int i = 0; i < squares.GetLength(0); i++)
+            for (int j = 0; j < squares.GetLength(1); j++)
             {
                 if (j == 0) Squares.Add(new List<Square>());
-                Console.WriteLine(squares[i,j].Coordinates.X);
-                Console.WriteLine(squares[i,j].Coordinates.Y);
-                Squares[j].Add(squares[i,j]);
+                Squares[i].Add(squares[i,j]);
             }
         }
     }
@@ -38,13 +36,11 @@ public class BoardDto
     public Board GetBoard()
     {
         var squares = new Square[Squares.Count,Squares[0].Count];
-        for (int j = 0; j < squares.GetLength(1); j++)
+        for (int i = 0; i < squares.GetLength(0); i++)
         {
-            for (int i = 0; i < squares.GetLength(0); i++)
+            for (int j = 0; j < squares.GetLength(1); j++)
             {
-                squares[i,j] = Squares[j][i];
-                Console.WriteLine(squares[i,j].Coordinates.X);
-                Console.WriteLine(squares[i,j].Coordinates.Y);
+                squares[i,j] = Squares[i][j];
             }
         }
         return new Board(PlayerOne, PlayerTwo, squares);

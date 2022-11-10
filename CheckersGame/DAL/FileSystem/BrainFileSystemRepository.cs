@@ -30,6 +30,9 @@ public class BrainFileSystemRepository : IBrainRepository
         {
             throw new NullReferenceException($"Could not deserialize: {fileContent}");
         }
+
+        var brain = brainDto.GetBrain();
+        Console.WriteLine(brain.Board.PlayerOne.Name);
         return brainDto.GetBrain();
     }
 

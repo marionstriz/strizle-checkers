@@ -45,12 +45,10 @@ public class Board
                     if (i + 1 < height / 2)
                     {
                         var button = new Button(PlayerOne.Color, EButtonState.OnBoard);
-                        PlayerOne.AddButton(button);
                         square.Button = button;
                     } else if (i + 1 > height / 2 + 1)
                     {
                         var button = new Button(PlayerTwo.Color, EButtonState.OnBoard);
-                        PlayerTwo.AddButton(button);
                         square.Button = button;
                     }
                 }
