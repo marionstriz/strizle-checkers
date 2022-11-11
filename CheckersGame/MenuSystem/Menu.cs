@@ -57,6 +57,17 @@ public class Menu
         AddAllMenuItems(items);
     }
 
+    public void RemoveMenuItem(MenuItem item)
+    {
+        var menuItem = _menuItems.Find(x => x.Equals(item));
+        if (menuItem == null)
+        {
+            throw new ArgumentException("Don't send in item that is not in list :(");
+        }
+        _menuItems.Remove(menuItem);
+        _shortcuts.Remove(menuItem.Shortcut);
+    }
+
     private void AddAllMenuItems(List<MenuItem>? items)
     {
         if (items != null)
@@ -96,7 +107,7 @@ public class Menu
         _menuItems.Add(menuItem);
     }
 
-    private MenuItem? GetMenuItemWithShortcut(string shortcut)
+    public MenuItem? GetMenuItemWithShortcut(string shortcut)
     {
         return _menuItems.FirstOrDefault(menuItem => menuItem.Shortcut.Equals(shortcut));
     }

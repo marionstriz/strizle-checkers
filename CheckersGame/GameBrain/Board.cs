@@ -56,6 +56,50 @@ public class Board
         }
     }
 
+    public bool TryParseCoordinate(string? inCoordinates, out SquareCoordinates? outCoords)
+    {
+        outCoords = null;
+        if (inCoordinates == null || inCoordinates.Trim().Length is < 2 or > 3 )
+        {
+            return false;
+        }
+        inCoordinates = inCoordinates.Trim();
+        var x = ' ';
+        for (var i = 0; i < Squares.GetLength(1); i++)
+        {
+            var alphaCoord = inCoordinates[0];
+            if (AlphabetChars[i].CompareTo(alphaCoord) == 0)
+            {
+                x = alphaCoord;
+                break;
+            }
+        }
+        if (x == ' ')
+        {
+            return false;
+        }
+        var numCoord = inCoordinates[1..].Trim();
+        var parsed = Int32.TryParse(numCoord, out var num);
+        if (!parsed)
+        {
+            return false;
+        }
+        var y = 0;
+        for (var i = 1; i <= Squares.GetLength(0); i++)
+        {
+            if (num == i)
+            {
+                y = num;
+                break;
+            }
+        }
+        outCoords = new SquareCoordinates(x, y);
+        return y != 0;
+    }
+    
+    //TODO: IsWithButton
+    //TODO: PlayerCheck
+
     public bool IsButtonSquare(SquareCoordinates coords)
     {
         return coords.X % 2 == 0 && coords.Y % 2 == 1

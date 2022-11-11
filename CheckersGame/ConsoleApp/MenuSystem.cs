@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using MenuSystem;
 using ConsoleUI;
 using DAL.FileSystem;
@@ -13,7 +12,7 @@ public class MenuSystem
     
     private readonly Menu _loadGameFileMenu = new(EMenuLevel.MoreThanSecond, "Load Game");
     private readonly Menu _saveMenu = new(EMenuLevel.MoreThanSecond, "Save Game");
-    private readonly Menu _gameMenu = new(EMenuLevel.MoreThanSecond, "Game Menu");
+    private readonly Menu _gameMenu = new(EMenuLevel.Second, "Game Menu");
     private readonly Menu _customOptionsMenu = new(EMenuLevel.MoreThanSecond, "Custom Options");
     private readonly Menu _boardSelectMenu = new(EMenuLevel.MoreThanSecond, "Select Board");
     private readonly Menu _startMenu = new(EMenuLevel.Second, "Start Menu");
@@ -41,13 +40,14 @@ public class MenuSystem
     {
         _saveMenu.NewMenuItems(new List<MenuItem>
         {
-            new("F", "Save To File", SaveGame),
+            new("F", "Save As File", SaveNewGame),
             new("D", "Save To Database", null)
         });
         _gameMenu.NewMenuItems(new List<MenuItem>
         {
-            new("P", "Play", _ui.PrintBrainBoard),
-            new("S", "Save", () => _ui.Menu.RunMenuForUserInput(_saveMenu))
+            new("P", "Play", _ui.BrainPlayGame),
+            new("S", "Save", () => SaveExistingGame(_ui.GetBrain().FileName)),
+            new("F", "Save As...", () => _ui.Menu.RunMenuForUserInput(_saveMenu))
         });
         _customOptionsMenu.NewMenuItems(new List<MenuItem>
         {
@@ -59,7 +59,7 @@ public class MenuSystem
         
         _boardSelectMenu.NewMenuItems(new List<MenuItem>
         {
-            new ("D", "Default Options", () => _ui.Menu.RunMenuForUserInput(_gameMenu)),
+            new ("D", "Default Options", () => NewGame(new GameOptions())),
             new ("C", "Custom Options", () => _ui.StartCustomOptions(_customOptionsMenu))
         });
 
@@ -75,10 +75,37 @@ public class MenuSystem
         });
     }
 
-    private string SaveGame()
+    private string SaveNewGame()
     {
-        _fileRepo.SaveBrain(_ui.GetBrain(), "123");
-        return "";
+        Console.Clear();
+        Console.ForegroundColor = _ui.MainColor;
+        Console.WriteLine("'X' to exit.");
+        Console.Write("Save game as: ");
+        var input = Console.ReadLine();
+        if (input == null || input.Trim().Length == 0)
+        {
+            _ui.PrintMenuError("File name cannot be empty. >:(");
+            return "";
+        }
+        if (input.ToUpper().Equals("X"))
+        {
+            return "";
+        }
+        return SaveGame(input, true);
+    }
+
+    private string SaveExistingGame(string? name) => SaveGame(name, false);
+
+    private string SaveGame(string? name, bool newGame)
+    {
+        if (name == null)
+        {
+            _ui.PrintMenuError("Current game has not been saved. Please select 'Save as...'.");
+            return "";
+        }
+        _fileRepo.SaveNewBrain(_ui.GetBrain(), name);
+        _ui.PrintSuccess($"Game saved with name '{name}'");
+        return newGame ? "R" : "";
     }
 
     private string NewGame(GameOptions options)
@@ -87,10 +114,27 @@ public class MenuSystem
         return _ui.Menu.RunMenuForUserInput(_gameMenu);
     }
 
-    private string LoadGame(CheckersBrain brain)
+    private string FileOptionsMenu(string menuShortcut, string fileName)
     {
+        var fileActionsMenu = new Menu(EMenuLevel.MoreThanSecond, "File Options", new List<MenuItem>
+        {
+            new("S", "Start", () => LoadGame(_fileRepo.GetBrain(fileName))),
+            new ("D", "Delete", () => DeleteSave(fileName, menuShortcut))
+        });
+        return _ui.Menu.RunMenuForUserInput(fileActionsMenu);
+    }
+    
+    private string LoadGame(CheckersBrain brain){
         _ui.LoadGame(brain);
         return _ui.Menu.RunMenuForUserInput(_gameMenu);
+    }
+
+    private string DeleteSave(string fileName, string menuShortcut)
+    {
+        _fileRepo.DeleteBrain(fileName);
+        _ui.PrintSuccess($"Game '{fileName}' deleted.");
+        _loadGameFileMenu.RemoveMenuItem(_loadGameFileMenu.GetMenuItemWithShortcut(menuShortcut)!);
+        return "R";
     }
 
     private string LoadGamesMenu()
@@ -99,7 +143,8 @@ public class MenuSystem
         var nr = 1;
         foreach (var fileName in _fileRepo.GetBrainFileNames())
         {
-            menuItems.Add(new MenuItem(nr.ToString(), fileName, () => LoadGame(_fileRepo.GetBrain(fileName))));
+            var shortcut = nr.ToString();
+            menuItems.Add(new MenuItem(shortcut, fileName, () => FileOptionsMenu(shortcut, fileName)));
             nr++;
         }
         _loadGameFileMenu.NewMenuItems(menuItems);

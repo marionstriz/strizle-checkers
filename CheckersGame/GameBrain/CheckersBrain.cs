@@ -2,6 +2,7 @@
 
 public class CheckersBrain
 {
+    public string? FileName { get; set; }
     public GameOptions GameOptions { get; }
     public Board Board { get; }
 

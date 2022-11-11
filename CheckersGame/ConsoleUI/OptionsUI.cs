@@ -80,7 +80,7 @@ public class OptionsUI
             throw new NullReferenceException("Congrats, you broke the game! Entered value cannot be null");
         }
         
-        bool inputParsed = Int32.TryParse(input!, out int inputInt);
+        bool inputParsed = Int32.TryParse(input, out int inputInt);
         
         if (!inputParsed)
         {

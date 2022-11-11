@@ -19,10 +19,65 @@ public class BrainUI
         Brain = brain;
     }
 
-    public string PrintBoard()
+    public string PlayGame()
     {
-        Console.WriteLine(GetHashCode());
-        Console.Clear();
+        var done = false;
+        while (!done)
+        {
+            var coords = AskButtonScreen();
+            if (coords == null)
+            {
+                return "";
+            }
+        }
+        return "";
+    }
+
+    private SquareCoordinates? AskButtonScreen()
+    {
+        var clearConsole = true;
+        do
+        {
+            PrintBoard(clearConsole);
+            var input = ButtonInput();
+            if (input != null && input.Trim().ToUpper().Equals("X"))
+            {
+                return null;
+            }
+            var parsed = Brain.Board.TryParseCoordinate(input, out var coords);
+            if (!parsed)
+            {
+                if (input == null || input.Length.Equals(0))
+                {
+                    _base.PrintError($"Coordinates cannot be empty.", false);
+                }
+                else
+                {
+                    _base.PrintError($"{input} are not valid coordinates", false);
+                }
+                clearConsole = false;
+            }
+            else
+            {
+                return coords;
+            }
+        } while (true);
+    }
+    
+    private string? ButtonInput()
+    {
+        Console.ForegroundColor = _base.MainColor;
+        Console.WriteLine("'X' to exit.");
+        Console.Write("Choose button: ");
+        return Console.ReadLine()?.Trim();
+    }
+
+    private void PrintBoard(bool clearConsole)
+    {
+        if (clearConsole)
+        {
+            Console.Clear();
+        }
         WriteBoardAlphaCoordinates();
 
         var squares = Brain.Board.Squares;
@@ -74,10 +129,6 @@ public class BrainUI
         
         WriteBoardAlphaCoordinates();
         Console.WriteLine();
-        
-        Console.Write("Your choice: ");
-        Console.ReadLine();
-        return "";
     }
 
     private void WriteLeftNumericCoordinate(int boardHeight, int currentIndex) =>

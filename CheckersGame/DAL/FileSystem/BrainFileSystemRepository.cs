@@ -32,11 +32,11 @@ public class BrainFileSystemRepository : IBrainRepository
         }
 
         var brain = brainDto.GetBrain();
-        Console.WriteLine(brain.Board.PlayerOne.Name);
-        return brainDto.GetBrain();
+        brain.FileName = name;
+        return brain;
     }
 
-    public void SaveBrain(CheckersBrain brain, string name)
+    public void SaveNewBrain(CheckersBrain brain, string name)
     {
         CheckOrCreateDirectory();
         var brainDto = new CheckersBrainDto(brain);
