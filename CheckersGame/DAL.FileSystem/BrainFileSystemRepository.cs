@@ -7,6 +7,7 @@ namespace DAL.FileSystem
     {
         private const string FileExtension = "json";
         private readonly string _brainsDirectory = "." + Path.DirectorySeparatorChar + "Saves";
+        private const ESaveType SaveType = ESaveType.File;
 
         public List<string> GetBrainFileNames()
         {
@@ -20,29 +21,30 @@ namespace DAL.FileSystem
             }
             return res;
         }
+        
+        public ESaveType GetSaveType() => SaveType;
 
         public CheckersBrain GetBrain(string name)
         {
             var fileContent = File.ReadAllText(GetFileName(name));
-            var dBrain = JsonSerializer.Deserialize<Domain.CheckersBrain>(fileContent);
-            if (dBrain == null)
+            var brain = JsonSerializer.Deserialize<CheckersBrain>(fileContent);
+            if (brain == null)
             {
                 throw new NullReferenceException($"Could not deserialize: {fileContent}");
             }
-            return new CheckersBrain(dBrain);
+            return brain;
         }
 
         public void SaveBrain(CheckersBrain brain, string name)
         {
             CheckOrCreateDirectory();
-            if (!name.Equals(brain.FileName))
+            if (brain.SaveOptions == null
+                || !brain.SaveOptions.Name.Equals(name)
+                || !brain.SaveOptions.SaveType.Equals(SaveType))
             {
-                brain.FileName = name;
+                brain.SaveOptions = new SaveOptions(name, SaveType);
             }
-            var fileContent = JsonSerializer.Serialize(brain.ToDomainBrain(true), new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            var fileContent = JsonSerializer.Serialize(brain);
             File.WriteAllText(GetFileName(name), fileContent);
         }
 

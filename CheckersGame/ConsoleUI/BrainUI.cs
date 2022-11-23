@@ -1,6 +1,10 @@
 using System.Security.AccessControl;
 using System.Text;
+using Domain;
 using GameBrain;
+using Board = GameBrain.Board;
+using CheckersBrain = GameBrain.CheckersBrain;
+using Player = GameBrain.Player;
 
 namespace ConsoleUI;
 

@@ -5,9 +5,9 @@ namespace Domain;
 public class CheckersBrain
 {
     public int Id { get; set; }
-    
-    [MaxLength(128)]
-    public string? FileName { get; set; }
+
+    [MaxLength(128)] 
+    public string Name { get; set; } = default!;
     
     public int GameOptionsId { get; set; }
     public GameOptions? GameOptions { get; set; } 

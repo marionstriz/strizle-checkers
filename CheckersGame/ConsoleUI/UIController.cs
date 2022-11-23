@@ -1,6 +1,8 @@
-﻿using DAL.FileSystem;
+﻿using DAL;
+using DAL.FileSystem;
 using GameBrain;
 using MenuSystem;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ConsoleUI;
 
@@ -15,17 +17,21 @@ public class UIController
     public MenuUI Menu { get; }
     public OptionsUI Options { get; }
     public BrainUI Brain { get; private set; }
-    public SaveGameUI SaveFile { get; }
+    public RepositoryUI FileRepo { get; }
+    public RepositoryUI DbRepo { get; }
 
-    public UIController()
+    public UIController(AppDbContext dbContext)
     {
         var options = new GameOptions();
         var defaultBrain = new CheckersBrain(options);
         var fileSystemRepo = new BrainFileSystemRepository();
+        var dbRepo = new BrainDbRepository(dbContext);
+        
         Menu = new MenuUI(this);
         Options = new OptionsUI(this, options);
         Brain = new BrainUI(this, defaultBrain);
-        SaveFile = new SaveGameUI(this, fileSystemRepo);
+        FileRepo = new RepositoryUI(this, fileSystemRepo);
+        DbRepo = new RepositoryUI(this, dbRepo);
     }
 
     public void NewGame(GameOptions options)
@@ -70,4 +76,18 @@ public class UIController
     public GameOptions GetOptions() => Options.Options;
 
     public string BrainPlayGame() => Brain.PlayGame();
+
+    public string SaveExisting()
+    {
+        if (Brain.Brain.SaveOptions == null)
+        {
+            PrintMenuError("Current game has not been saved. Please select 'Save as...'.");
+            return "";
+        }
+        if (Brain.Brain.SaveOptions.SaveType == FileRepo.Repository.GetSaveType())
+        {
+            return FileRepo.SaveExistingGame();
+        }
+        return DbRepo.SaveExistingGame();
+    }
 }

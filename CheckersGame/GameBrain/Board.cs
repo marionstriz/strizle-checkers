@@ -1,11 +1,13 @@
 using System.Security.AccessControl;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Domain;
 
 namespace GameBrain;
 
 public class Board
 {
     public static readonly char[] AlphabetChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
-    private int? Id { get; }
     
     public Player PlayerOne { get; }
     public Player PlayerTwo { get; }
@@ -26,15 +28,17 @@ public class Board
 
     public Board(Domain.Board dBoard)
     {
-        if (dBoard.PlayerOne == null || dBoard.PlayerTwo == null || dBoard.Squares == null)
+        var players = dBoard.BoardPlayers?.ToArray();
+        if (players is not {Length: 2} || players[0].Player == null || players[1].Player == null)
         {
             throw new ArgumentException(
-                "Unable to initialize board from Domain object - please ensure all related entities are queried.");
+                "Unable to initialize board from Domain object - error loading board players.");
         }
-        Id = dBoard.Id;
-        PlayerOne = new Player(dBoard.PlayerOne);
-        PlayerTwo = new Player(dBoard.PlayerTwo);
-        Squares = dBoard.Squares.Select(s => new Square(s)).ToArray();
+
+        var squares = JsonSerializer.Deserialize<Square[]>(dBoard.SerializedGameState);
+        PlayerOne = new Player(players[0].Player!);
+        PlayerTwo = new Player(players[1].Player!);
+        Squares = squares ?? throw new ArgumentException("Unable to deserialize square array");
         Width = dBoard.Width;
         Height = dBoard.Height;
     }
@@ -136,19 +140,35 @@ public class Board
         return null;
     }
 
-    public Domain.Board ToDomainBoard(bool forJson)
+    [JsonConstructor]
+    public Board(Player playerOne, Player playerTwo, Square[] squares, int width, int height)
     {
-        var dBoard = new Domain.Board();
-        if (Id != null)
+        PlayerOne = playerOne;
+        PlayerTwo = playerTwo;
+        Squares = squares;
+        Width = width;
+        Height = height;
+    }
+
+    public Domain.Board ToDomainBoard()
+    {
+        var dBoard = new Domain.Board
         {
-            dBoard.Id = (int) Id;
-        }
-        dBoard.Height = Height;
-        dBoard.Width = Width;
-        ICollection<Domain.Square> squaresCollection = Squares.Select(s => s.ToDomainSquare(dBoard, forJson)).ToArray();
-        dBoard.Squares = squaresCollection;
-        dBoard.PlayerOne = PlayerOne.ToDomainPlayer();
-        dBoard.PlayerTwo = PlayerTwo.ToDomainPlayer();
+            Height = Height,
+            Width = Width,
+            SerializedGameState = JsonSerializer.Serialize(Squares),
+            BoardPlayers = new List<BoardPlayer>()
+        };
+        dBoard.BoardPlayers.Add(new BoardPlayer
+        {
+            Board = dBoard,
+            Player = PlayerOne.ToDomainPlayer()
+        });
+        dBoard.BoardPlayers.Add(new BoardPlayer
+        {
+            Board = dBoard,
+            Player = PlayerTwo.ToDomainPlayer()
+        });
         return dBoard;
     }
 }

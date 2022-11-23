@@ -1,8 +1,10 @@
+using System.Text.Json.Serialization;
+using Domain;
+
 namespace GameBrain
 {
     public class Player
     {
-        private int? Id { get; }
         public string Name { get; }
         public EColor Color { get; }
         public bool IsCurrent { get; set; }
@@ -15,29 +17,27 @@ namespace GameBrain
         
         public Player(Domain.Player dPlayer)
         {
-            if (dPlayer.Color is not (0 or 1))
-            {
-                throw new ArgumentException(
-                    "Unable to initialize player from Domain object - invalid enum values.");
-            }
-            Id = dPlayer.Id;
             Name = dPlayer.Name;
-            Color = (EColor) dPlayer.Color;
+            Color = dPlayer.Color;
             IsCurrent = dPlayer.IsCurrent;
         }
-        
+
+        [JsonConstructor]
+        public Player(string name, EColor color, bool isCurrent)
+        {
+            Name = name;
+            Color = color;
+            IsCurrent = isCurrent;
+        }
+
         public Domain.Player ToDomainPlayer()
         {
             var dPlayer = new Domain.Player
             {
                 Name = Name,
-                Color = (int) Color,
+                Color = Color,
                 IsCurrent = IsCurrent
             };
-            if (Id != null)
-            {
-                dPlayer.Id = (int) Id;
-            }
 
             return dPlayer;
         }

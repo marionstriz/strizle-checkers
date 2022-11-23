@@ -8,12 +8,10 @@ public class Board
 
     public int Width { get; set; }
     public int Height { get; set; }
-
-    public int PlayerOneId { get; set; }
-    public Player? PlayerOne { get; set; }
     
-    public int PlayerTwoId { get; set; }
-    public Player? PlayerTwo { get; set; }
+    public ICollection<BoardPlayer>? BoardPlayers { get; set; }
 
-    public ICollection<Square>? Squares { get; set; }
+    public string SerializedGameState { get; set; } = default!;
+    
+    public ICollection<CheckersBrain>? CheckersBrains { get; set; }
 }

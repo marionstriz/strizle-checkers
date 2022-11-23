@@ -4,12 +4,12 @@ using MenuSystem;
 
 namespace ConsoleUI;
 
-public class SaveGameUI
+public class RepositoryUI
 {
     private readonly UIController _base;
-    private IBrainRepository Repository { get; set; }
+    public IBrainRepository Repository { get; }
 
-    public SaveGameUI(UIController c, IBrainRepository r)
+    public RepositoryUI(UIController c, IBrainRepository r)
     {
         _base = c;
         Repository = r;
@@ -22,25 +22,20 @@ public class SaveGameUI
         Console.WriteLine("'X' to exit.");
         Console.Write("Save game as: ");
         var input = Console.ReadLine();
-        if (input == null || input.Trim().Length == 0)
-        {
-            _base.PrintMenuError("File name cannot be empty. >:(");
-            return "";
-        }
-        if (input.ToUpper().Equals("X"))
+        if ("X".Equals(input?.ToUpper()))
         {
             return "";
         }
         return SaveGame(input, true);
     }
     
-    public string SaveExistingGame(string? name) => SaveGame(name, false);
+    public string SaveExistingGame() => SaveGame(_base.GetBrain().SaveOptions?.Name, false);
 
     private string SaveGame(string? name, bool newGame)
     {
-        if (name == null)
+        if (name == null || name.Trim().Length == 0)
         {
-            _base.PrintMenuError("Current game has not been saved. Please select 'Save as...'.");
+            _base.PrintMenuError("Game save name cannot be empty.");
             return "";
         }
         if (newGame && Repository.GetBrainFileNames().Contains(name))
@@ -49,7 +44,7 @@ public class SaveGameUI
             return "";
         }
         Repository.SaveBrain(_base.GetBrain(), name);
-        _base.PrintSuccess($"Game saved with name '{name}'");
+        _base.PrintSuccess($"Game saved to {Repository.GetSaveType().ToString()} with name '{name}'");
         return newGame ? "R" : "";
     }
 

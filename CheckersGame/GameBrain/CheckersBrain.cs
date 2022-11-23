@@ -4,13 +4,12 @@ namespace GameBrain
 {
     public class CheckersBrain
     {
-        private int? Id { get; }
-        public string? FileName { get; set; }
+        public SaveOptions? SaveOptions { get; set; }
         public GameOptions GameOptions { get; }
         public Board Board { get; }
-        private DateTime StartedAt { get; } = DateTime.Now;
-        private DateTime? GameOverAt { get; set; }
-        private string? GameWonByPlayer { get; set; }
+        public DateTime StartedAt { get; } = DateTime.Now;
+        public DateTime? GameOverAt { get; set; }
+        public string? GameWonByPlayer { get; set; }
 
         public CheckersBrain(GameOptions gameOptions)
         {
@@ -33,31 +32,41 @@ namespace GameBrain
                 throw new ArgumentException(
                     "Unable to initialize game brain from Domain object - please ensure all related entities are queried.");
             }
-            Id = dBrain.Id;
-            FileName = dBrain.FileName;
+            SaveOptions = new SaveOptions(dBrain.Name, ESaveType.Database);
             GameOptions = new GameOptions(dBrain.GameOptions);
             Board = new Board(dBrain.Board);
             StartedAt = dBrain.StartedAt;
             GameOverAt = dBrain.GameOverAt;
             GameWonByPlayer = dBrain.GameWonByPlayer;
         }
-        
-        public Domain.CheckersBrain ToDomainBrain(bool forJson)
+
+        [JsonConstructor]
+        public CheckersBrain(SaveOptions? saveOptions, GameOptions gameOptions, Board board,
+            DateTime startedAt, DateTime? gameOverAt, string? gameWonByPlayer)
         {
+            SaveOptions = saveOptions;
+            GameOptions = gameOptions;
+            Board = board;
+            StartedAt = startedAt;
+            GameOverAt = gameOverAt;
+            GameWonByPlayer = gameWonByPlayer;
+        }
+
+        public Domain.CheckersBrain ToDomainBrain()
+        {
+            if (SaveOptions == null)
+            {
+                throw new ApplicationException("Game brain must have a name when saved!");
+            }
             var dBrain = new Domain.CheckersBrain
             {
-                FileName = FileName,
+                Name = SaveOptions.Name,
                 GameOptions = GameOptions.ToDomainOptions(),
-                Board = Board.ToDomainBoard(forJson),
+                Board = Board.ToDomainBoard(),
                 StartedAt = StartedAt,
                 GameOverAt = GameOverAt,
                 GameWonByPlayer = GameWonByPlayer
             };
-            if (Id != null)
-            {
-                dBrain.Id = (int) Id;
-            }
-
             return dBrain;
         }
     }
