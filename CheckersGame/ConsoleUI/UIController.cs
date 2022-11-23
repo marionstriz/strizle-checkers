@@ -1,4 +1,5 @@
-﻿using GameBrain;
+﻿using DAL.FileSystem;
+using GameBrain;
 using MenuSystem;
 
 namespace ConsoleUI;
@@ -14,14 +15,17 @@ public class UIController
     public MenuUI Menu { get; }
     public OptionsUI Options { get; }
     public BrainUI Brain { get; private set; }
+    public SaveGameUI SaveFile { get; }
 
     public UIController()
     {
         var options = new GameOptions();
         var defaultBrain = new CheckersBrain(options);
+        var fileSystemRepo = new BrainFileSystemRepository();
         Menu = new MenuUI(this);
         Options = new OptionsUI(this, options);
         Brain = new BrainUI(this, defaultBrain);
+        SaveFile = new SaveGameUI(this, fileSystemRepo);
     }
 
     public void NewGame(GameOptions options)

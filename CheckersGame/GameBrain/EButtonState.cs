@@ -1,7 +1,8 @@
-namespace GameBrain;
-
-public enum EButtonState
+namespace GameBrain
 {
-    OnBoard,
-    Eaten
+    public enum EButtonState
+    {
+        OnBoard,
+        Eaten
+    }
 }

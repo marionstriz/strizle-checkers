@@ -1,7 +1,8 @@
-namespace GameBrain;
-
-public enum EColor
+namespace GameBrain
 {
-    White,
-    Black
+    public enum EColor
+    {
+        White,
+        Black
+    }
 }
