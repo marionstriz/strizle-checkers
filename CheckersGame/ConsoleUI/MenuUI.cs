@@ -12,10 +12,11 @@ public class MenuUI
         _base = b;
     }
     
-    public string RunMenuForUserInput(Menu menu)
+    public char RunMenuForUserInput(Menu menu)
     {
+        Console.CursorVisible = false;
         var done = false;
-        var menuOutput = "";
+        var menuOutput = ' ';
         Console.Clear();
         do
         {
@@ -37,18 +38,12 @@ public class MenuUI
                 }
                 Console.WriteLine(item);
             }
-
-            Console.ForegroundColor = _base.FillerColor;
-            Console.WriteLine("---------------------");
-
-            Console.ForegroundColor = _base.MainColor;
-            Console.Write("Your choice: ");
-            var userInput = Console.ReadLine();
+            var userInput = Console.ReadKey().KeyChar;
             try
             {
-                menuOutput = menu.ProcessInput(userInput?.ToUpper().Trim() ?? "") ?? "";
-                if (menuOutput.Equals("") 
-                    || menu.Level.Equals(EMenuLevel.Main) && menuOutput.Equals("M"))
+                menuOutput = menu.ProcessInput(char.ToUpper(userInput)) ?? ' ';
+                if (menuOutput.Equals(' ') 
+                    || menu.Level.Equals(EMenuLevel.Main) && menuOutput.Equals('M'))
                 {
                     if (ClearConsole)
                     {
@@ -60,9 +55,10 @@ public class MenuUI
                     }
                     continue;
                 } 
-                if (menu.Level.Equals(EMenuLevel.MoreThanSecond) && menuOutput.Equals("R"))
+                if (menu.Level.Equals(EMenuLevel.MoreThanSecond) && menuOutput.Equals('R') 
+                    || menu.Level.Equals(EMenuLevel.List) && menuOutput.Equals('P'))
                 {
-                    return "";
+                    return ' ';
                 }
                 done = true;
             }

@@ -2,18 +2,18 @@
 
 public class MenuItem
 {
-    public string Shortcut { get; }
+    public char Shortcut { get; }
     public string Title { get; set; }
-    private readonly Func<string>? _methodToRun;
+    private readonly Func<char>? _methodToRun;
 
-    public MenuItem(string shortcut, string title, Func<string>? methodToRun)
+    public MenuItem(char shortcut, string title, Func<char>? methodToRun)
     {
         Shortcut = shortcut;
         Title = title;
         _methodToRun = methodToRun;
     }
 
-    public string? RunMethod() => _methodToRun?.Invoke();
+    public char? RunMethod() => _methodToRun?.Invoke();
 
     public override string ToString() => $"({Shortcut}) {Title}";
 }

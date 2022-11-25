@@ -2,7 +2,6 @@
 using DAL.FileSystem;
 using GameBrain;
 using MenuSystem;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ConsoleUI;
 
@@ -14,40 +13,40 @@ public class UIController
     public ConsoleColor ErrorColor => ConsoleColor.Red;
     public ConsoleColor YaaasColor => ConsoleColor.Green;
 
-    public MenuUI Menu { get; }
-    public OptionsUI Options { get; }
-    public BrainUI Brain { get; private set; }
-    public RepositoryUI FileRepo { get; }
-    public RepositoryUI DbRepo { get; }
+    public MenuUI MenuUI { get; }
+    public OptionsUI OptionsUI { get; }
+    public GameUI GameUI { get; private set; }
+    public RepositoryUI FileRepoUI { get; }
+    public RepositoryUI DbRepoUI { get; }
 
     public UIController(AppDbContext dbContext)
     {
         var options = new GameOptions();
-        var defaultBrain = new CheckersBrain(options);
-        var fileSystemRepo = new BrainFileSystemRepository();
-        var dbRepo = new BrainDbRepository(dbContext);
+        var defaultBrain = new CheckersGame(options);
+        var fileSystemRepo = new GameFileSystemRepository();
+        var dbRepo = new GameDbRepository(dbContext);
         
-        Menu = new MenuUI(this);
-        Options = new OptionsUI(this, options);
-        Brain = new BrainUI(this, defaultBrain);
-        FileRepo = new RepositoryUI(this, fileSystemRepo);
-        DbRepo = new RepositoryUI(this, dbRepo);
+        MenuUI = new MenuUI(this);
+        OptionsUI = new OptionsUI(this, options);
+        GameUI = new GameUI(this, defaultBrain);
+        FileRepoUI = new RepositoryUI(this, fileSystemRepo);
+        DbRepoUI = new RepositoryUI(this, dbRepo);
     }
 
     public void NewGame(GameOptions options)
     {
-        Brain = new BrainUI(this, new CheckersBrain(options));
+        GameUI = new GameUI(this, new CheckersGame(options));
     }
 
-    public void LoadGame(CheckersBrain brain)
+    public void LoadGame(CheckersGame game)
     {
-        Brain = new BrainUI(this, brain);
+        GameUI = new GameUI(this, game);
     }
 
-    public string StartCustomOptions(Menu optionsMenu)
+    public char StartCustomOptions(Menu optionsMenu)
     {
-        Options.Options = new GameOptions();
-        return Menu.RunMenuForUserInput(optionsMenu);
+        OptionsUI.Options = new GameOptions();
+        return MenuUI.RunMenuForUserInput(optionsMenu);
     }
 
     public void PrintSuccess(string success)
@@ -55,7 +54,7 @@ public class UIController
         Console.Clear();
         Console.ForegroundColor = YaaasColor;
         Console.WriteLine(success);
-        Menu.ClearConsole = false;
+        MenuUI.ClearConsole = false;
     }
 
     public void PrintMenuError(string error) => PrintError(error, true);
@@ -65,29 +64,41 @@ public class UIController
         Console.Clear();
         Console.ForegroundColor = ErrorColor;
         Console.WriteLine(error);
-        if (menuError)
-        {
-            Menu.ClearConsole = false;
-        }
+        if (menuError) MenuUI.ClearConsole = false;
     }
 
-    public CheckersBrain GetBrain() => Brain.Brain;
+    public CheckersGame GetBrain() => GameUI.Game;
 
-    public GameOptions GetOptions() => Options.Options;
+    public GameOptions GetOptions() => OptionsUI.Options;
 
-    public string BrainPlayGame() => Brain.PlayGame();
-
-    public string SaveExisting()
+    public char BrainPlayGame() => GameUI.PlayGame();
+    
+    public string? AskForInput(string prompt, bool clearConsole = true)
     {
-        if (Brain.Brain.SaveOptions == null)
+        Console.CursorVisible = true;
+        
+        if (clearConsole) Console.Clear();
+        Console.ForegroundColor = MainColor;
+        
+        Console.WriteLine("'X' to exit.");
+        Console.Write(prompt);
+        
+        var input = Console.ReadLine();
+        
+        Console.CursorVisible = false;
+        if (!"X".Equals(input?.ToUpper())) return input!;
+        return null;
+    }
+
+    public char SaveExisting()
+    {
+        if (GameUI.Game.SaveOptions == null)
         {
             PrintMenuError("Current game has not been saved. Please select 'Save as...'.");
-            return "";
+            return ' ';
         }
-        if (Brain.Brain.SaveOptions.SaveType == FileRepo.Repository.GetSaveType())
-        {
-            return FileRepo.SaveExistingGame();
-        }
-        return DbRepo.SaveExistingGame();
+        return GameUI.Game.SaveOptions.SaveType == FileRepoUI.Repository.GetSaveType()
+            ? FileRepoUI.SaveExistingGame() 
+            : DbRepoUI.SaveExistingGame();
     }
 }

@@ -6,8 +6,10 @@ public class Menu
 {
     public EMenuLevel Level { get; }
     public string Title { get; }
+    
     private List<MenuItem> _menuItems = new();
-    private HashSet<string> _shortcuts = new();
+    private HashSet<char> _shortcuts = new();
+    private Menu? SubMenu { get; set; }
     public ReadOnlyCollection<MenuItem> MenuItems => _menuItems.AsReadOnly();
 
     public Menu(EMenuLevel level, string title, List<MenuItem>? items)
@@ -30,42 +32,81 @@ public class Menu
         Title = title;
     }
 
-    public string? ProcessInput(string input)
+    public char? ProcessInput(char c)
     {
-        var menuItem = GetMenuItemWithShortcut(input);
-
+        var menuItem = GetMenuItemByShortcut(c);
         if (menuItem == null)
         {
-            throw new ArgumentException($"No menu item with shortcut '{input}' in {Title}");
+            throw new ArgumentException($"No menu item with shortcut '{c}' in {Title}");
         }
-        return !IsBaseMenuItem(menuItem) ? menuItem.RunMethod() : input;
+        return !IsBaseMenuItem(menuItem) ? menuItem.RunMethod() : c;
     }
     
     public bool IsBaseMenuItem(MenuItem menuItem)
     {
-        if (Level.Equals(EMenuLevel.MoreThanSecond) && menuItem.Equals(GetMenuItemWithShortcut("R"))
-            || !Level.Equals(EMenuLevel.Main) && menuItem.Equals(GetMenuItemWithShortcut("M"))) {
+        if (!Level.Equals(EMenuLevel.Main) && !Level.Equals(EMenuLevel.Second)
+                                           && menuItem.Equals(GetMenuItemByShortcut('R'))
+            || !Level.Equals(EMenuLevel.Main) && menuItem.Equals(GetMenuItemByShortcut('M'))) {
             return true;
         }
-        return menuItem.Equals(GetMenuItemWithShortcut("X"));
+        return menuItem.Equals(GetMenuItemByShortcut('X'));
     }
 
     public void NewMenuItems(List<MenuItem>? items)
     {
-        _menuItems = new List<MenuItem>();
-        _shortcuts = new HashSet<string>();
+        ReInitializeFields();
         AddAllMenuItems(items);
     }
 
-    public void RemoveMenuItem(MenuItem item)
+    public void AddListMenuItems(List<string> items, Func<string, char> itemFunc,
+        Func<Menu, char>? loadMenuFunc = null, int pageNr = 1)
     {
-        var menuItem = _menuItems.Find(x => x.Equals(item));
+        ReInitializeFields();
+
+        var itemCount = items.Count;
+        var nr = 0;
+        
+        if (itemCount > 10)
+        {
+            SubMenu = new Menu(EMenuLevel.List, Title);
+            
+            AddMenuItemAndShortcut(new MenuItem('N', "Next Page",
+                loadMenuFunc != null ? () => loadMenuFunc(SubMenu) : null));
+            
+            SubMenu.AddListMenuItems(items.GetRange(10, itemCount-10),
+                itemFunc, loadMenuFunc, pageNr+1);
+            
+            items = items.GetRange(0, 10);
+        }
+        if (pageNr > 1)
+        {
+            Console.WriteLine(pageNr);
+            AddMenuItemAndShortcut(new MenuItem('P', "Previous Page", () => 'P'));
+        }
+        foreach (var item in items)
+        {
+            var shortcut = char.Parse(nr.ToString());
+            AddMenuItemAndShortcut(new MenuItem(shortcut, item, () => itemFunc(item)));
+            nr++;
+        }
+        AddBaseMenuItems();
+    }
+
+    public void RemoveMenuItemByTitle(string s)
+    {
+        var menuItem = GetMenuItemByTitle(s);
+        var currMenu = this;
+        while (menuItem == null && currMenu.SubMenu != null)
+        {
+            currMenu = currMenu.SubMenu;
+            menuItem = currMenu.GetMenuItemByTitle(s);
+        }
         if (menuItem == null)
         {
-            throw new ArgumentException("Don't send in item that is not in list :(");
+            throw new ArgumentException("Don't send in item that is not in list.");
         }
-        _menuItems.Remove(menuItem);
-        _shortcuts.Remove(menuItem.Shortcut);
+        currMenu._menuItems.Remove(menuItem);
+        currMenu._shortcuts.Remove(menuItem.Shortcut);
     }
 
     private void AddAllMenuItems(List<MenuItem>? items)
@@ -87,15 +128,15 @@ public class Menu
 
     private void AddBaseMenuItems()
     {
-        if (Level.Equals(EMenuLevel.MoreThanSecond))
+        if (Level.Equals(EMenuLevel.MoreThanSecond) || Level.Equals(EMenuLevel.List))
         {
-            AddMenuItemAndShortcut(new MenuItem("R", "Return", null));
+            AddMenuItemAndShortcut(new MenuItem('R', "Return", null));
         }
         if (!Level.Equals(EMenuLevel.Main))
         {
-            AddMenuItemAndShortcut(new MenuItem("M", "Main Menu", null));
+            AddMenuItemAndShortcut(new MenuItem('M', "Main Menu", null));
         }
-        AddMenuItemAndShortcut(new MenuItem("X", "Exit", null));
+        AddMenuItemAndShortcut(new MenuItem('X', "Exit", null));
     }
 
     private void AddMenuItemAndShortcut(MenuItem menuItem)
@@ -107,8 +148,20 @@ public class Menu
         _menuItems.Add(menuItem);
     }
 
-    public MenuItem? GetMenuItemWithShortcut(string shortcut)
+    private MenuItem? GetMenuItemByShortcut(char shortcut)
     {
-        return _menuItems.FirstOrDefault(menuItem => menuItem.Shortcut.Equals(shortcut));
+        return _menuItems.FirstOrDefault(m => m.Shortcut.Equals(shortcut));
+    }
+
+    private MenuItem? GetMenuItemByTitle(string title)
+    {
+        return _menuItems.FirstOrDefault(m => m.Title.Equals(title));
+    }
+
+    private void ReInitializeFields()
+    {
+        _menuItems = new List<MenuItem>();
+        _shortcuts = new HashSet<char>();
+        SubMenu = null;
     }
 }

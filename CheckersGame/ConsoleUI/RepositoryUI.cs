@@ -7,89 +7,85 @@ namespace ConsoleUI;
 public class RepositoryUI
 {
     private readonly UIController _base;
-    public IBrainRepository Repository { get; }
+    public IGameRepository Repository { get; }
 
-    public RepositoryUI(UIController c, IBrainRepository r)
+    public RepositoryUI(UIController c, IGameRepository r)
     {
         _base = c;
         Repository = r;
     }
     
-    public string SaveNewGame()
+    public char SaveNewGame()
     {
-        Console.Clear();
-        Console.ForegroundColor = _base.MainColor;
-        Console.WriteLine("'X' to exit.");
-        Console.Write("Save game as: ");
-        var input = Console.ReadLine();
-        if ("X".Equals(input?.ToUpper()))
-        {
-            return "";
-        }
-        return SaveGame(input, true);
+        var input = _base.AskForInput("Save game as: ");
+        return input == null ? ' ' : SaveGame(input, true);
+    }
+
+    public char LoadGameWithInputName(Menu loadMenu, Menu gameMenu)
+    {
+        var input = _base.AskForInput("Save game name: ");
+        return input == null ? ' ' : LoadLoadMenu(loadMenu, gameMenu, input);
     }
     
-    public string SaveExistingGame() => SaveGame(_base.GetBrain().SaveOptions?.Name, false);
+    public char SaveExistingGame() => SaveGame(_base.GetBrain().SaveOptions?.Name, false);
 
-    private string SaveGame(string? name, bool newGame)
+    private char SaveGame(string? name, bool newGame)
     {
         if (name == null || name.Trim().Length == 0)
         {
             _base.PrintMenuError("Game save name cannot be empty.");
-            return "";
+            return ' ';
         }
-        if (newGame && Repository.GetBrainFileNames().Contains(name))
+        if (newGame && Repository.GetGameFileNames().Contains(name))
         {
             _base.PrintMenuError($"Save with name '{name}' already exists.");
-            return "";
+            return ' ';
         }
-        Repository.SaveBrain(_base.GetBrain(), name);
+        Repository.SaveGame(_base.GetBrain(), name);
         _base.PrintSuccess($"Game saved to {Repository.GetSaveType().ToString()} with name '{name}'");
-        return newGame ? "R" : "";
+        return newGame ? 'R' : ' ';
     }
 
-    public string NewGame(GameOptions options, Menu gameMenu)
+    public char NewGame(GameOptions options, Menu gameMenu)
     {
         _base.NewGame(options);
-        return _base.Menu.RunMenuForUserInput(gameMenu);
+        return _base.MenuUI.RunMenuForUserInput(gameMenu);
     }
-    
-    public string LoadLoadMenu(Menu loadMenu, Menu gameMenu)
-    {
-        var menuItems = new List<MenuItem>();
-        var nr = 1;
-        foreach (var fileName in Repository.GetBrainFileNames())
-        {
-            var shortcut = nr.ToString();
-            menuItems.Add(new MenuItem(shortcut, fileName, 
-                () => GetFileOptionsMenu(shortcut, fileName, loadMenu, gameMenu)));
-            nr++;
-        }
-        loadMenu.NewMenuItems(menuItems);
 
-        return _base.Menu.RunMenuForUserInput(loadMenu);
+    public char LoadLoadMenu(Menu loadMenu, Menu gameMenu, string nameContains = "")
+    {
+        var fileNames = nameContains != ""
+            ? Repository.GetGameFileNamesContaining(nameContains)
+            : Repository.GetGameFileNames();
+        
+        loadMenu.AddListMenuItems(fileNames,
+            (t) => GetFileOptionsMenu(t, loadMenu, gameMenu),
+            m => _base.MenuUI.RunMenuForUserInput(m));
+
+        return _base.MenuUI.RunMenuForUserInput(loadMenu);
     }
     
-    private string DeleteSave(string fileName, string menuShortcut, Menu loadMenu)
+    private char DeleteSave(string fileName, Menu loadMenu)
     {
-        Repository.DeleteBrain(fileName);
+        Repository.DeleteGame(fileName);
+        loadMenu.RemoveMenuItemByTitle(fileName);
         _base.PrintSuccess($"Game '{fileName}' deleted.");
-        loadMenu.RemoveMenuItem(loadMenu.GetMenuItemWithShortcut(menuShortcut)!);
-        return "R";
+        return 'R';
     }
 
-    private string GetFileOptionsMenu(string menuShortcut, string fileName, Menu loadMenu, Menu gameMenu)
+    private char GetFileOptionsMenu(string fileName, Menu loadMenu, Menu gameMenu)
     {
+        Console.WriteLine("in file options menu");
         var fileActionsMenu = new Menu(EMenuLevel.MoreThanSecond, "File Options", new List<MenuItem>
         {
-            new("S", "Start", () => LoadGame(Repository.GetBrain(fileName), gameMenu)),
-            new ("D", "Delete", () => DeleteSave(fileName, menuShortcut, loadMenu))
+            new('S', "Start", () => LoadGame(Repository.GetGameByName(fileName), gameMenu)),
+            new ('D', "Delete", () => DeleteSave(fileName, loadMenu))
         });
-        return _base.Menu.RunMenuForUserInput(fileActionsMenu);
+        return _base.MenuUI.RunMenuForUserInput(fileActionsMenu);
     }
     
-    private string LoadGame(CheckersBrain brain, Menu gameMenu){
-        _base.LoadGame(brain);
-        return _base.Menu.RunMenuForUserInput(gameMenu);
+    private char LoadGame(CheckersGame game, Menu gameMenu){
+        _base.LoadGame(game);
+        return _base.MenuUI.RunMenuForUserInput(gameMenu);
     }
 }

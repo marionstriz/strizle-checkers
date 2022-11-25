@@ -4,5 +4,6 @@ public enum EMenuLevel
 {
     Main,
     Second,
-    MoreThanSecond
+    MoreThanSecond,
+    List
 }
