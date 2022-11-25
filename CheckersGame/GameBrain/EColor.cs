@@ -1,4 +1,4 @@
-namespace Domain
+namespace GameBrain
 {
     public enum EColor
     {

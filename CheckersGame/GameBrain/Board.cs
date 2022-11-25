@@ -1,7 +1,7 @@
 using System.Security.AccessControl;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Domain;
+using DAL.DTO;
 
 namespace GameBrain;
 
@@ -9,9 +9,6 @@ public class Board
 {
     public static readonly char[] AlphabetChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
     
-    public Player PlayerOne { get; }
-    public Player PlayerTwo { get; }
-
     public Square[] Squares { get; }
     public int Width { get; }
     public int Height { get; }
@@ -19,30 +16,19 @@ public class Board
     public Board(int width, int height)
     {
         Squares = new Square[height * width];
-        PlayerOne = new Player("p1", EColor.White);
-        PlayerTwo = new Player("p2", EColor.Black);
         Width = width;
         Height = height;
         InitializeBoard();
     }
 
-    public Board(Domain.Board dBoard)
+    public Board(int width, int height, string serializedState)
     {
-        var players = dBoard.BoardPlayers?.ToArray();
-        if (players is not {Length: 2} || players[0].Player == null || players[1].Player == null)
-        {
-            throw new ArgumentException(
-                "Unable to initialize board from Domain object - error loading board players.");
-        }
-
-        var squares = JsonSerializer.Deserialize<Square[]>(dBoard.SerializedGameState);
-        PlayerOne = new Player(players[0].Player!);
-        PlayerTwo = new Player(players[1].Player!);
-        Squares = squares ?? throw new ArgumentException("Unable to deserialize square array");
-        Width = dBoard.Width;
-        Height = dBoard.Height;
+        Width = width;
+        Height = height;
+        var deserializedState = JsonSerializer.Deserialize<Square[]>(serializedState);
+        Squares = deserializedState ?? throw new ArgumentException("Unable to deserialize game state.");
     }
-
+    
     private void InitializeBoard()
     {
         for (var i = 0; i < Height; i++)
@@ -58,12 +44,12 @@ public class Board
                 
                 if (i + 1 < Height / 2)
                 {
-                    var button = new Button(PlayerOne.Color, EButtonState.OnBoard);
+                    var button = new Button(EColor.White, EButtonState.OnBoard);
                     square.Button = button;
                 } else if (Height % 2 == 1 && i + 1 > Height / 2 + 2 || 
                            Height % 2 == 0 && i + 1 > Height / 2 + 1)
                 {
-                    var button = new Button(PlayerTwo.Color, EButtonState.OnBoard);
+                    var button = new Button(EColor.Black, EButtonState.OnBoard);
                     square.Button = button;
                 }
             }
@@ -138,37 +124,5 @@ public class Board
             }
         }
         return null;
-    }
-
-    [JsonConstructor]
-    public Board(Player playerOne, Player playerTwo, Square[] squares, int width, int height)
-    {
-        PlayerOne = playerOne;
-        PlayerTwo = playerTwo;
-        Squares = squares;
-        Width = width;
-        Height = height;
-    }
-
-    public Domain.Board ToDomainBoard()
-    {
-        var dBoard = new Domain.Board
-        {
-            Height = Height,
-            Width = Width,
-            SerializedGameState = JsonSerializer.Serialize(Squares),
-            BoardPlayers = new List<BoardPlayer>()
-        };
-        dBoard.BoardPlayers.Add(new BoardPlayer
-        {
-            Board = dBoard,
-            Player = PlayerOne.ToDomainPlayer()
-        });
-        dBoard.BoardPlayers.Add(new BoardPlayer
-        {
-            Board = dBoard,
-            Player = PlayerTwo.ToDomainPlayer()
-        });
-        return dBoard;
     }
 }

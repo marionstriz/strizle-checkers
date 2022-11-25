@@ -1,14 +1,12 @@
 using System.Security.AccessControl;
 using System.Text;
-using Domain;
 using GameBrain;
 using Board = GameBrain.Board;
-using CheckersBrain = GameBrain.CheckersBrain;
-using Player = GameBrain.Player;
+using CheckersGame = GameBrain.CheckersGame;
 
 namespace ConsoleUI;
 
-public class BrainUI
+public class GameUI
 {
     public ConsoleColor BoardPrimarySquareColor => ConsoleColor.Gray;
     public ConsoleColor BoardSecondarySquareColor => ConsoleColor.White;
@@ -16,32 +14,32 @@ public class BrainUI
     public ConsoleColor PlayerTwoButtonColor => ConsoleColor.Black;
     
     private readonly UIController _base;
-    public CheckersBrain Brain { get; }
+    public CheckersGame Game { get; }
 
-    public BrainUI(UIController b, CheckersBrain brain)
+    public GameUI(UIController b, CheckersGame game)
     {
         _base = b;
-        Brain = brain;
+        Game = game;
     }
 
-    public string PlayGame()
+    public char PlayGame()
     {
+        Console.CursorVisible = true;
         var done = false;
         while (!done)
         {
             var coords = AskButtonScreen();
             if (coords == null)
             {
-                return "";
+                return ' ';
             }
         }
-        return "";
+        return ' ';
     }
 
     private SquareCoordinates? AskButtonScreen()
     {
         var firstTime = true;
-        var board = Brain.Board;
         do
         {
             if (firstTime)
@@ -49,79 +47,58 @@ public class BrainUI
                 PrintBoard();
                 firstTime = false;
             }
-            else
-            {
-                PrintBoard(false);
-            }
+            else PrintBoard(false);
+            
             var input = ButtonInput();
-            if (input != null && input.Trim().ToUpper().Equals("X"))
-            {
-                return null;
+            if (input == null) return null;
+            
+            var parsed = Game.Board.TryParseCoordinate(input, out var coords);
+            
+            if (!parsed) {
+                _base.PrintError(input.Length.Equals(0)
+                    ? $"Coordinates cannot be empty."
+                    : $"{input} are not valid coordinates");
+                continue;
             }
-            var parsed = board.TryParseCoordinate(input, out var coords);
-            if (!parsed)
-            {
-                if (input == null || input.Length.Equals(0))
-                {
-                    _base.PrintError($"Coordinates cannot be empty.");
-                }
-                else
-                {
-                    _base.PrintError($"{input} are not valid coordinates");
-                }
-            }
-            else
-            {
-                Player currentPlayer = board.PlayerOne.IsCurrent ? board.PlayerOne : board.PlayerTwo;
-                if (board.IsPlayerButtonSquare(coords!, currentPlayer))
-                {
-                    return coords;
-                }
-                _base.PrintError($"The chosen square does not hold your button.");
-            }
+            var currentPlayer = Game.PlayerOne.IsCurrent ? Game.PlayerOne : Game.PlayerTwo;
+                
+            if (Game.Board.IsPlayerButtonSquare(coords!, currentPlayer)) return coords;
+                
+            _base.PrintError($"The chosen square does not hold your button.");
         } while (true);
     }
     
     private string? ButtonInput()
     {
-        Console.ForegroundColor = _base.MainColor;
-        Console.WriteLine("'X' to exit.");
-        Console.WriteLine("Please enter button coordinates in the format {letter}{number}, eg. A1");
-        Console.Write("Choose button: ");
-        return Console.ReadLine()?.Trim();
+        return _base.AskForInput("Please enter button coordinates in the format" +
+                          " {letter}{number}, eg. A1\nChoose button: ", false);
     }
 
     private void PrintBoard(bool clearConsole = true)
     {
-        if (clearConsole)
-        {
-            Console.Clear();
-        }
+        if (clearConsole) Console.Clear();
         WriteBoardAlphaCoordinates();
 
-        var squares = Brain.Board.Squares;
-        var rowCount = Brain.Board.Height;
-        var columnCount = Brain.Board.Width;
+        var squares = Game.Board.Squares;
+        var rowCount = Game.Board.Height;
+        var columnCount = Game.Board.Width;
 
         for (var i = rowCount; i > 0; i--)
         {
             for (int k = 0; k < 3; k++)
             {
-                if (k != 1)
-                {
-                    Console.Write("   ");
-                }
-                if (k == 1)
-                {
-                    WriteLeftNumericCoordinate(i);
-                }
+                if (k != 1) Console.Write("   ");
+                if (k == 1) WriteLeftNumericCoordinate(i);
+                
                 for (var j = 0; j < columnCount; j++)
                 {
                     var coords = new SquareCoordinates(Board.AlphabetChars[j], i);
                     var square = squares[(rowCount-i)*columnCount + j];
                     
-                    Console.BackgroundColor = Brain.Board.IsButtonSquare(coords) ?
-                        BoardPrimarySquareColor : BoardSecondarySquareColor;
+                    Console.BackgroundColor = Game.Board.IsButtonSquare(coords)
+                        ? BoardPrimarySquareColor 
+                        : BoardSecondarySquareColor;
+                    
                     if (k == 1 && square.Button != null)
                     {
                         Console.ForegroundColor = square.Button.Color.Equals(EColor.White)
@@ -129,15 +106,10 @@ public class BrainUI
                             : PlayerTwoButtonColor;
                         Console.Write("  ⬤   ");
                     }
-                    else
-                    {
-                        Console.Write("      ");
-                    }
+                    else Console.Write("      ");
                 }
-                if (k == 1)
-                {
-                    WriteRightNumericCoordinate(i);
-                }
+                if (k == 1) WriteRightNumericCoordinate(i);
+                
                 Console.WriteLine();
                 Console.ResetColor();
             }
@@ -169,7 +141,7 @@ public class BrainUI
         var sb = new StringBuilder();
         sb.Append("   ");
         
-        for (var i = 0; i < Brain.Board.Width; i++)
+        for (var i = 0; i < Game.Board.Width; i++)
         {
             sb.Append($"   {Board.AlphabetChars[i]}  ");
         }

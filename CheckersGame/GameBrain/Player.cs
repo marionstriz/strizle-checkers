@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using Domain;
 
 namespace GameBrain
 {
@@ -15,11 +14,16 @@ namespace GameBrain
             Color = color;
         }
         
-        public Player(Domain.Player dPlayer)
+        public Player(DAL.DTO.Player dto)
         {
-            Name = dPlayer.Name;
-            Color = dPlayer.Color;
-            IsCurrent = dPlayer.IsCurrent;
+            if (dto.Color is not (0 or 1))
+            {
+                throw new ArgumentException(
+                    $"Unable to create player from DTO - color value must be 0 or 1, was {dto.Color}.");
+            }
+            Name = dto.Name;
+            Color = (EColor) dto.Color;
+            IsCurrent = dto.IsCurrent;
         }
 
         [JsonConstructor]
@@ -30,16 +34,14 @@ namespace GameBrain
             IsCurrent = isCurrent;
         }
 
-        public Domain.Player ToDomainPlayer()
+        public DAL.DTO.Player ToDto()
         {
-            var dPlayer = new Domain.Player
+            return new DAL.DTO.Player
             {
                 Name = Name,
-                Color = Color,
+                Color = (int) Color,
                 IsCurrent = IsCurrent
             };
-
-            return dPlayer;
         }
     }
 }

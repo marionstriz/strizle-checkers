@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL.FileSystem", "DAL.FileS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameBrain", "GameBrain\GameBrain.csproj", "{DF539DAF-94F0-48A3-B19D-95B4F7B7AEB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{B2BD159D-3A12-4EBD-8BF6-05B7489E7386}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL.DTO", "DAL.DTO\DAL.DTO.csproj", "{B2BD159D-3A12-4EBD-8BF6-05B7489E7386}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
