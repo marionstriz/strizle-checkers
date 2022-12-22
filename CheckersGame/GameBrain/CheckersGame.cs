@@ -1,5 +1,6 @@
 ﻿using System.Security.AccessControl;
 using System.Text.Json;
+using DAL.DTO;
 
 namespace GameBrain
 {
@@ -13,45 +14,98 @@ namespace GameBrain
         public DateTime StartedAt { get; } = DateTime.Now.ToUniversalTime();
         public DateTime? GameOverAt { get; set; }
         public string? GameWonByPlayer { get; set; }
+        public List<Move>? NextMoves { get; set; }
 
-        public CheckersGame(GameOptions gameOptions)
+        public CheckersGame(GameOptions gameOptions, string p1Name, string p2Name)
         {
             GameOptions = gameOptions;
             Board = new Board(gameOptions.Width, gameOptions.Height);
-            PlayerOne = new Player("p1", EColor.White);
-            PlayerTwo = new Player("p2", EColor.Black);
-            if (gameOptions.PlayerOneStarts)
-            {
-                PlayerOne.IsCurrent = true;
-            }
-            else
-            {
-                PlayerTwo.IsCurrent = true;
-            }
+            
+            PlayerOne = new Player(p1Name, EColor.White, gameOptions.PlayerOneStarts, 
+                Board.CountButtonsWithColor(EColor.White));
+            PlayerTwo = new Player(p2Name, EColor.Black, !gameOptions.PlayerOneStarts, 
+                Board.CountButtonsWithColor(EColor.Black));
         }
 
         public CheckersGame(DAL.DTO.CheckersGame dto, ESaveType saveType)
         {
-            if (dto.PlayerOne == null || dto.PlayerTwo == null)
+            if (dto.PlayerOne == null || dto.PlayerTwo == null || dto.GameOptions == null || dto.GameStates == null)
             {
                 throw new ArgumentException(
                     "Unable to initialize game from DTO - please ensure all related entities are queried.");
             }
+            var latestState = dto.GameStates.OrderByDescending(s => s.UpdatedAt).First();
             SaveOptions = new SaveOptions(dto.Name, saveType);
+            
             GameOptions = new GameOptions{
-                Height = dto.BoardHeight, 
-                Width = dto.BoardWidth, 
-                PlayerOneStarts = dto.PlayerOneStarts, 
-                CompulsoryJumps = dto.CompulsoryJumps};
-            Board = new Board(dto.BoardWidth, dto.BoardHeight, dto.SerializedGameState);
+                Height = dto.GameOptions.BoardHeight, 
+                Width = dto.GameOptions.BoardWidth, 
+                PlayerOneStarts = dto.GameOptions.PlayerOneStarts, 
+                CompulsoryJumps = dto.GameOptions.CompulsoryJumps};
+            
+            Board = new Board(dto.GameOptions.BoardWidth, dto.GameOptions.BoardHeight, 
+                latestState.SerializedBoardState);
+            
             StartedAt = dto.StartedAt;
             GameOverAt = dto.GameOverAt;
             GameWonByPlayer = dto.GameWonByPlayer;
-            PlayerOne = new Player(dto.PlayerOne);
-            PlayerTwo = new Player(dto.PlayerTwo);
+            
+            PlayerOne = new Player(dto.PlayerOne.Name, dto.PlayerOneColor, latestState.PlayerOneIsCurrent,
+                Board.CountButtonsWithColor(dto.PlayerOneColor));
+            
+            var playerTwoColor = dto.PlayerOneColor == EColor.Black ? EColor.White : EColor.Black;
+            PlayerTwo = new Player(dto.PlayerTwo.Name, playerTwoColor, !latestState.PlayerOneIsCurrent,
+                Board.CountButtonsWithColor(playerTwoColor));
+
+            if (latestState.SerializedNextMoves != null) 
+                NextMoves = JsonSerializer.Deserialize<List<Move>>(latestState.SerializedNextMoves);
         }
 
-        public DAL.DTO.CheckersGame ToDto(bool includePlayers = true)
+        private void SwapPlayerTurn()
+        {
+            PlayerOne.IsCurrent = !PlayerOne.IsCurrent;
+            PlayerTwo.IsCurrent = !PlayerTwo.IsCurrent;
+        }
+        
+        public void MakeMove(Move move)
+        {
+            if (NextMoves != null && !NextMoves.Contains(move))
+            {
+                throw new ApplicationException("Please carry out compulsory move first");
+            }
+            var sourceSq = Board.Squares[move.Source];
+            var destSq = Board.Squares[move.Destination];
+            if (!sourceSq.HasButton()) 
+                throw new ApplicationException("Don't try to move a nonexistent button please");
+            var movingButton = sourceSq.Button;
+            destSq.Button = movingButton;
+            sourceSq.Button = null;
+
+            if (movingButton!.Color.Equals(EColor.Black) && destSq.Coordinates.Y == Board.Height ||
+                movingButton.Color.Equals(EColor.White) && destSq.Coordinates.Y == 1)
+            {
+                movingButton.State = EButtonState.Supermario;
+            }
+            if (move.NextMoves != null) NextMoves = move.NextMoves;
+            else if (NextMoves != null) NextMoves = null;
+            if (move.WithEdibleSquare != null) EatPlayerButton(Board.Squares[move.WithEdibleSquare.Value]);
+            if (NextMoves == null) SwapPlayerTurn();
+        }
+
+        private void EatPlayerButton(Square edible)
+        {
+            var player = edible.Button!.Color.Equals(PlayerOne.Color) ? PlayerOne : PlayerTwo;
+            
+            player.ButtonCount--;
+            if (player.ButtonCount == 0)
+            {
+                GameOverAt = DateTime.UtcNow;
+                GameWonByPlayer = player.Equals(PlayerOne) ? PlayerTwo.Name : PlayerOne.Name;
+            }
+            edible.Button = null;
+        }
+
+        public DAL.DTO.CheckersGame ToDto()
         {
             if (SaveOptions == null)
             {
@@ -60,21 +114,27 @@ namespace GameBrain
             var dBrain = new DAL.DTO.CheckersGame
             {
                 Name = SaveOptions.Name,
-                BoardHeight = GameOptions.Height,
-                BoardWidth = GameOptions.Width,
-                PlayerOneStarts = GameOptions.PlayerOneStarts,
-                CompulsoryJumps = GameOptions.CompulsoryJumps,
                 StartedAt = StartedAt,
                 GameOverAt = GameOverAt,
                 GameWonByPlayer = GameWonByPlayer,
-                SerializedGameState = JsonSerializer.Serialize(Board.Squares)
+                GameStates = new List<CheckersGameState>{new() {
+                    SerializedBoardState = JsonSerializer.Serialize(Board.Squares),
+                    PlayerOneIsCurrent = PlayerOne.IsCurrent,
+                    SerializedNextMoves = NextMoves != null ? JsonSerializer.Serialize(NextMoves) : null
+                }},
+                PlayerOneColor = PlayerOne.Color
             };
-            if (includePlayers)
-            {
-                dBrain.PlayerOne = PlayerOne.ToDto();
-                dBrain.PlayerTwo = PlayerTwo.ToDto();
-            }
             return dBrain;
+        }
+
+        public DAL.DTO.CheckersGame ToDtoWithAllRelatedEntities()
+        {
+            var dto = ToDto();
+            dto.PlayerOne = new DAL.DTO.Player {Name = PlayerOne.Name};
+            dto.PlayerTwo = new DAL.DTO.Player {Name = PlayerTwo.Name};
+            dto.GameOptions = GameOptions.ToDto();
+
+            return dto;
         }
     }
 }

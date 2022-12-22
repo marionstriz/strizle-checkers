@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using MenuSystem;
 
 namespace ConsoleUI;
@@ -39,6 +40,7 @@ public class MenuUI
                 Console.WriteLine(item);
             }
             var userInput = Console.ReadKey().KeyChar;
+            if (userInput.Equals((char)ConsoleKey.Enter)) userInput = ' ';
             try
             {
                 menuOutput = menu.ProcessInput(char.ToUpper(userInput)) ?? ' ';
@@ -62,7 +64,7 @@ public class MenuUI
                 }
                 done = true;
             }
-            catch (ArgumentException)
+            catch (Menu.MenuException)
             {
                 Console.Clear();
                 Console.ForegroundColor = _base.ErrorColor;

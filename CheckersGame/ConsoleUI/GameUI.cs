@@ -1,5 +1,6 @@
 using System.Security.AccessControl;
 using System.Text;
+using DAL;
 using GameBrain;
 using Board = GameBrain.Board;
 using CheckersGame = GameBrain.CheckersGame;
@@ -10,6 +11,7 @@ public class GameUI
 {
     public ConsoleColor BoardPrimarySquareColor => ConsoleColor.Gray;
     public ConsoleColor BoardSecondarySquareColor => ConsoleColor.White;
+    public ConsoleColor BoardHighlightSquareColor => ConsoleColor.Green;
     public ConsoleColor PlayerOneButtonColor => ConsoleColor.White;
     public ConsoleColor PlayerTwoButtonColor => ConsoleColor.Black;
     
@@ -28,28 +30,62 @@ public class GameUI
         var done = false;
         while (!done)
         {
-            var coords = AskButtonScreen();
-            if (coords == null)
+            if (Game.GameWonByPlayer != null)
             {
-                return ' ';
+                done = true;
+                CelebrateGoodTimesComeOn();
+            }
+            var currentPlayer = Game.PlayerOne.IsCurrent ? Game.PlayerOne : Game.PlayerTwo;
+            var movesMap = Game.Board.GetCurrentPossibleMoves(currentPlayer, Game.GameOptions.CompulsoryJumps);
+
+            int? moveSquare;
+            List<Move>? movesList;
+            if (Game.NextMoves == null)
+            {
+                var buttonSquare = AskForAnyValidSquare(movesMap.Keys.ToArray());
+                if (buttonSquare == null) return ' ';
+
+                var gotValue = movesMap.TryGetValue(buttonSquare.Value, out movesList);
+                
+                if (gotValue) moveSquare = AskForAnyValidSquare(
+                    movesList!.ConvertAll(m => m.Destination).ToArray(), buttonSquare);
+                else throw new ApplicationException(
+                        "Cannot find chosen square with valid moves, please contact administrator.");
+            }
+            else
+            {
+                moveSquare = AskForAnyValidSquare(
+                    Game.NextMoves.Select(m => m.Destination).ToArray(), Game.NextMoves[0].Source);
+                movesList = Game.NextMoves;
+            } 
+            if (moveSquare == null) return ' ';
+            foreach (var move in movesList.Where(move => moveSquare.Equals(move.Destination)))
+            {
+                Game.MakeMove(move);
+                break;
             }
         }
         return ' ';
     }
 
-    private SquareCoordinates? AskButtonScreen()
+    private void CelebrateGoodTimesComeOn()
+    {
+        _base.AskForInput($"Congratulations, {Game.GameWonByPlayer} has won the game!");
+    }
+
+    private int? AskForAnyValidSquare(int[] validSquares, int? moveButtonSquare = null)
     {
         var firstTime = true;
         do
         {
             if (firstTime)
             {
-                PrintBoard();
+                PrintBoard(validSquares, highlightButtonSquare:moveButtonSquare);
                 firstTime = false;
             }
-            else PrintBoard(false);
+            else PrintBoard(validSquares, moveButtonSquare, false);
             
-            var input = ButtonInput();
+            var input = SquareInput();
             if (input == null) return null;
             
             var parsed = Game.Board.TryParseCoordinate(input, out var coords);
@@ -60,23 +96,30 @@ public class GameUI
                     : $"{input} are not valid coordinates");
                 continue;
             }
-            var currentPlayer = Game.PlayerOne.IsCurrent ? Game.PlayerOne : Game.PlayerTwo;
-                
-            if (Game.Board.IsPlayerButtonSquare(coords!, currentPlayer)) return coords;
-                
-            _base.PrintError($"The chosen square does not hold your button.");
+            foreach (var squareIndex in validSquares)
+            {
+                if (Game.Board.Squares[squareIndex].Coordinates.Equals(coords)) return squareIndex;
+            }
+            _base.PrintError($"Please choose a valid square.");
         } while (true);
     }
     
-    private string? ButtonInput()
+    private string? SquareInput()
     {
-        return _base.AskForInput("Please enter button coordinates in the format" +
-                          " {letter}{number}, eg. A1\nChoose button: ", false);
+        return _base.AskForInput("Please enter square coordinates in the format" +
+                          " {letter}{number}, eg. A1\nChoose a highlighted square: ", false);
     }
 
-    private void PrintBoard(bool clearConsole = true)
+    private void PrintBoard(int[] highlightSquares, 
+        int? highlightButtonSquare = null, bool clearConsole = true)
     {
         if (clearConsole) Console.Clear();
+        
+        var currentPlayer = Game.PlayerOne.IsCurrent ? Game.PlayerOne : Game.PlayerTwo;
+
+        Console.ForegroundColor = _base.MainColor;
+        Console.WriteLine($"Current turn: {currentPlayer.Name} ({currentPlayer.Color})\n");
+        
         WriteBoardAlphaCoordinates();
 
         var squares = Game.Board.Squares;
@@ -92,19 +135,22 @@ public class GameUI
                 
                 for (var j = 0; j < columnCount; j++)
                 {
-                    var coords = new SquareCoordinates(Board.AlphabetChars[j], i);
-                    var square = squares[(rowCount-i)*columnCount + j];
+                    var squareIndex = (rowCount - i) * columnCount + j;
+                    var square = squares[squareIndex];
+                    var squareHighlighted = highlightSquares.Any(s => s.Equals((rowCount-i)*columnCount + j));
                     
-                    Console.BackgroundColor = Game.Board.IsButtonSquare(coords)
-                        ? BoardPrimarySquareColor 
+                    Console.BackgroundColor = square.IsMovableSquare()
+                        ? squareHighlighted ? BoardHighlightSquareColor : BoardPrimarySquareColor
                         : BoardSecondarySquareColor;
                     
                     if (k == 1 && square.Button != null)
                     {
-                        Console.ForegroundColor = square.Button.Color.Equals(EColor.White)
-                            ? PlayerOneButtonColor
-                            : PlayerTwoButtonColor;
-                        Console.Write("  ⬤   ");
+                        Console.ForegroundColor = squareIndex.Equals(highlightButtonSquare) ?
+                                BoardHighlightSquareColor : square.Button.Color.Equals(EColor.White)
+                                ? PlayerOneButtonColor
+                                : PlayerTwoButtonColor;
+                        var buttonString = square.Button.State.Equals(EButtonState.Supermario) ? " 𒁎    " : "  ⬤   ";
+                        Console.Write(buttonString);
                     }
                     else Console.Write("      ");
                 }
@@ -145,7 +191,6 @@ public class GameUI
         {
             sb.Append($"   {Board.AlphabetChars[i]}  ");
         }
-
         sb.Append("   ");
         Console.WriteLine(sb);
     }

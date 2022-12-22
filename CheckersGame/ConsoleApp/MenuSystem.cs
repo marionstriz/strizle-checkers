@@ -54,12 +54,12 @@ namespace ConsoleApp
                 new('B', "Set new board size", _ui.OptionsUI.BoardSizePrompt),
                 new('P', "Change current starting player", _ui.OptionsUI.SwitchStartingPlayer),
                 new('A', "Change compulsory jump settings", _ui.OptionsUI.SwitchCompulsoryJumps),
-                new('S', "Start Game", () => _ui.FileRepoUI.NewGame(_ui.GetOptions(), _gameMenu))
+                new('C', "Continue", () => _ui.AskForPlayerNames(_ui.GetOptions(), _gameMenu))
             });
         
             _boardSelectMenu.NewMenuItems(new List<MenuItem>
             {
-                new ('D', "Default Options", () => _ui.FileRepoUI.NewGame(new GameOptions(), _gameMenu)),
+                new ('D', "Default Options", () => _ui.AskForPlayerNames(new GameOptions(), _gameMenu)),
                 new ('C', "Custom Options", () => _ui.StartCustomOptions(_customOptionsMenu))
             });
             
@@ -84,6 +84,7 @@ namespace ConsoleApp
             _mainMenu.NewMenuItems(new List<MenuItem>
             {
                 new ('N', "New Game", () => _ui.MenuUI.RunMenuForUserInput(_boardSelectMenu)),
+                new ('C', "Continue Game", () => _ui.ContinueGame(_gameMenu)),
                 new ('L', "Load Game", () => _ui.MenuUI.RunMenuForUserInput(_saveListOptionMenu))
             });
         }

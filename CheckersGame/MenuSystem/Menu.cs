@@ -22,7 +22,7 @@ public class Menu
         }
         catch (ArgumentException e)
         {
-            throw new ArgumentException($"Unable to create menu. {e.Message}");
+            throw new MenuException($"Unable to create menu. {e.Message}");
         }
     }
 
@@ -37,7 +37,7 @@ public class Menu
         var menuItem = GetMenuItemByShortcut(c);
         if (menuItem == null)
         {
-            throw new ArgumentException($"No menu item with shortcut '{c}' in {Title}");
+            throw new MenuException($"No menu item with shortcut '{c}' in {Title}");
         }
         return !IsBaseMenuItem(menuItem) ? menuItem.RunMethod() : c;
     }
@@ -103,7 +103,7 @@ public class Menu
         }
         if (menuItem == null)
         {
-            throw new ArgumentException("Don't send in item that is not in list.");
+            throw new MenuException("Don't send in item that is not in list.");
         }
         currMenu._menuItems.Remove(menuItem);
         currMenu._shortcuts.Remove(menuItem.Shortcut);
@@ -143,7 +143,7 @@ public class Menu
     {
         if (!_shortcuts.Add(menuItem.Shortcut))
         {
-            throw new ArgumentException($"Menu item shortcut '{menuItem.Shortcut}' already in use.");
+            throw new MenuException($"Menu item shortcut '{menuItem.Shortcut}' already in use.");
         }
         _menuItems.Add(menuItem);
     }
@@ -163,5 +163,10 @@ public class Menu
         _menuItems = new List<MenuItem>();
         _shortcuts = new HashSet<char>();
         SubMenu = null;
+    }
+
+    public class MenuException : ApplicationException
+    {
+        public MenuException(string s) : base(s) { }
     }
 }

@@ -1,5 +1,7 @@
 using System.Text.Json;
+using DAL.DTO;
 using GameBrain;
+using CheckersGame = GameBrain.CheckersGame;
 
 namespace DAL.FileSystem
 {
@@ -36,7 +38,9 @@ namespace DAL.FileSystem
             {
                 game.SaveOptions = new SaveOptions(name, SaveType);
             }
-            var fileContent = JsonSerializer.Serialize(game.ToDto());
+
+            var dto = game.ToDtoWithAllRelatedEntities();
+            var fileContent = JsonSerializer.Serialize(dto);
             File.WriteAllText(GetFileName(name), fileContent);
         }
 

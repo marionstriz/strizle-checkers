@@ -17,17 +17,17 @@ public class RepositoryUI
     
     public char SaveNewGame()
     {
-        var input = _base.AskForInput("Save game as: ");
+        var input = _base.AskForNonBlankInput("Save game as: ");
         return input == null ? ' ' : SaveGame(input, true);
     }
 
     public char LoadGameWithInputName(Menu loadMenu, Menu gameMenu)
     {
-        var input = _base.AskForInput("Save game name: ");
+        var input = _base.AskForInput("Enter partial or full game save name: ");
         return input == null ? ' ' : LoadLoadMenu(loadMenu, gameMenu, input);
     }
     
-    public char SaveExistingGame() => SaveGame(_base.GetBrain().SaveOptions?.Name, false);
+    public char SaveExistingGame() => SaveGame(_base.GetBrain()!.SaveOptions?.Name, false);
 
     private char SaveGame(string? name, bool newGame)
     {
@@ -41,15 +41,9 @@ public class RepositoryUI
             _base.PrintMenuError($"Save with name '{name}' already exists.");
             return ' ';
         }
-        Repository.SaveGame(_base.GetBrain(), name);
+        Repository.SaveGame(_base.GetBrain()!, name);
         _base.PrintSuccess($"Game saved to {Repository.GetSaveType().ToString()} with name '{name}'");
         return newGame ? 'R' : ' ';
-    }
-
-    public char NewGame(GameOptions options, Menu gameMenu)
-    {
-        _base.NewGame(options);
-        return _base.MenuUI.RunMenuForUserInput(gameMenu);
     }
 
     public char LoadLoadMenu(Menu loadMenu, Menu gameMenu, string nameContains = "")
@@ -59,7 +53,7 @@ public class RepositoryUI
             : Repository.GetGameFileNames();
         
         loadMenu.AddListMenuItems(fileNames,
-            (t) => GetFileOptionsMenu(t, loadMenu, gameMenu),
+            t => GetFileOptionsMenu(t, loadMenu, gameMenu),
             m => _base.MenuUI.RunMenuForUserInput(m));
 
         return _base.MenuUI.RunMenuForUserInput(loadMenu);
@@ -78,14 +72,9 @@ public class RepositoryUI
         Console.WriteLine("in file options menu");
         var fileActionsMenu = new Menu(EMenuLevel.MoreThanSecond, "File Options", new List<MenuItem>
         {
-            new('S', "Start", () => LoadGame(Repository.GetGameByName(fileName), gameMenu)),
+            new('S', "Start", () => _base.LoadGame(Repository.GetGameByName(fileName), gameMenu)),
             new ('D', "Delete", () => DeleteSave(fileName, loadMenu))
         });
         return _base.MenuUI.RunMenuForUserInput(fileActionsMenu);
-    }
-    
-    private char LoadGame(CheckersGame game, Menu gameMenu){
-        _base.LoadGame(game);
-        return _base.MenuUI.RunMenuForUserInput(gameMenu);
     }
 }

@@ -15,32 +15,51 @@ public class UIController
 
     public MenuUI MenuUI { get; }
     public OptionsUI OptionsUI { get; }
-    public GameUI GameUI { get; private set; }
+    public GameUI? GameUI { get; private set; }
     public RepositoryUI FileRepoUI { get; }
     public RepositoryUI DbRepoUI { get; }
 
     public UIController(AppDbContext dbContext)
     {
         var options = new GameOptions();
-        var defaultBrain = new CheckersGame(options);
         var fileSystemRepo = new GameFileSystemRepository();
         var dbRepo = new GameDbRepository(dbContext);
         
         MenuUI = new MenuUI(this);
         OptionsUI = new OptionsUI(this, options);
-        GameUI = new GameUI(this, defaultBrain);
         FileRepoUI = new RepositoryUI(this, fileSystemRepo);
         DbRepoUI = new RepositoryUI(this, dbRepo);
     }
 
-    public void NewGame(GameOptions options)
+    public char AskForPlayerNames(GameOptions options, Menu gameMenu)
     {
-        GameUI = new GameUI(this, new CheckersGame(options));
+        string? p1 = AskForNonBlankInput("Enter name for player 1: ");
+        if (p1 == null) return ' ';
+        
+        string? p2 = AskForNonBlankInput("Enter name for player 2: ");
+        
+        return p2 == null ? ' ' : NewGame(options, p1, p2, gameMenu);
     }
 
-    public void LoadGame(CheckersGame game)
+    public char ContinueGame(Menu gameMenu)
     {
+        if (GameUI == null)
+        {
+            PrintMenuError("No game ongoing. Please load or start a new game.");
+            return ' ';
+        }
+        return MenuUI.RunMenuForUserInput(gameMenu);
+    }
+
+    private char NewGame(GameOptions options, string p1, string p2, Menu gameMenu)
+    {
+        GameUI = new GameUI(this, new CheckersGame(options, p1, p2));
+        return MenuUI.RunMenuForUserInput(gameMenu);
+    }
+    
+    public char LoadGame(CheckersGame game, Menu gameMenu){
         GameUI = new GameUI(this, game);
+        return MenuUI.RunMenuForUserInput(gameMenu);
     }
 
     public char StartCustomOptions(Menu optionsMenu)
@@ -67,11 +86,24 @@ public class UIController
         if (menuError) MenuUI.ClearConsole = false;
     }
 
-    public CheckersGame GetBrain() => GameUI.Game;
+    public CheckersGame? GetBrain() => GameUI?.Game;
 
     public GameOptions GetOptions() => OptionsUI.Options;
 
-    public char BrainPlayGame() => GameUI.PlayGame();
+    public char BrainPlayGame() => GameUI!.PlayGame();
+
+    public string? AskForNonBlankInput(string prompt, bool clearConsole = true)
+    {
+        bool currClear = clearConsole;
+        do
+        {
+            var input = AskForInput(prompt, currClear);
+            if (input == null || input.Trim().Length > 0) return input;
+            
+            PrintError("Input cannot be empty.");
+            currClear = false;
+        } while (true);
+    }
     
     public string? AskForInput(string prompt, bool clearConsole = true)
     {
@@ -86,13 +118,13 @@ public class UIController
         var input = Console.ReadLine();
         
         Console.CursorVisible = false;
-        if (!"X".Equals(input?.ToUpper())) return input!;
+        if (!"X".Equals(input?.Trim().ToUpper())) return input!;
         return null;
     }
 
     public char SaveExisting()
     {
-        if (GameUI.Game.SaveOptions == null)
+        if (GameUI?.Game.SaveOptions == null)
         {
             PrintMenuError("Current game has not been saved. Please select 'Save as...'.");
             return ' ';

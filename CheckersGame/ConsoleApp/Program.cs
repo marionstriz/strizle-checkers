@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 
 var options = new DbContextOptionsBuilder<AppDbContext>()
+//    .UseLoggerFactory(AppDbContextFactory.MyLoggerFactory)
     .UseSqlite("Data Source=/Users/marionstriz/Documents/dev/School/icd0008-2022f/CheckersGame/app.db")
     .Options;
 using var dbContext = new AppDbContext(options);

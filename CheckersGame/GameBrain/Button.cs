@@ -10,4 +10,9 @@ public class Button
         Color = color;
         State = state;
     }
+
+    public bool IsSupermario()
+    {
+        return State.Equals(EButtonState.Supermario);
+    }
 }

@@ -1,6 +1,9 @@
+using System.Security.AccessControl;
 using System.Text.Json;
+using DAL.DTO;
 using GameBrain;
 using Microsoft.EntityFrameworkCore;
+using CheckersGame = GameBrain.CheckersGame;
 
 namespace DAL;
 
@@ -54,30 +57,34 @@ public class GameDbRepository : IGameRepository
             game.SaveOptions = new SaveOptions(name, SaveType);
         }
         
-        var gameFromDb = GetDtoByName(name);
+        var gameFromDb = GetDtoByNameWithoutIncludes(name);
         
         if (gameFromDb == null)
         {
-            DAL.DTO.CheckersGame newGame;
-            if (ESaveType.Database.Equals(ogSaveType))
-            {
-                var ogGame = _dbContext.CheckersGames
-                    .First(g => g.Name == ogName);
-                
-                newGame = game.ToDto(false);
-                newGame.PlayerOneId = ogGame.PlayerOneId;
-                newGame.PlayerTwoId = ogGame.PlayerTwoId;
-                
-            } else newGame = game.ToDto();
+            DAL.DTO.CheckersGame newGame = game.ToDto();
+            var playerOne = GetPlayerDtoByName(game.PlayerOne.Name);
+            var playerTwo = GetPlayerDtoByName(game.PlayerTwo.Name);
+            var options = GetOptionsByOptions(game.GameOptions);
+
+            if (playerOne != null) newGame.PlayerOneId = playerOne.Id;
+            else newGame.PlayerOne = new DTO.Player {Name = game.PlayerOne.Name};
+            
+            if (playerTwo != null) newGame.PlayerTwoId = playerTwo.Id;
+            else newGame.PlayerTwo = new DTO.Player {Name = game.PlayerTwo.Name};
+
+            if (options != null) newGame.GameOptionsId = options.Id;
+            else newGame.GameOptions = game.GameOptions.ToDto();
             
             _dbContext.CheckersGames.Add(newGame);
         }
         else
         {
-            gameFromDb.PlayerOne!.IsCurrent = game.PlayerOne.IsCurrent;
-            gameFromDb.PlayerTwo!.IsCurrent = game.PlayerTwo.IsCurrent;
-            gameFromDb.SerializedGameState = JsonSerializer.Serialize(game.Board.Squares);
-            gameFromDb.UpdatedAt = DateTime.UtcNow;
+            _dbContext.GameStates.Add(new CheckersGameState
+            {
+                CheckersGameId = gameFromDb.Id,
+                PlayerOneIsCurrent = game.PlayerOne.IsCurrent,
+                SerializedBoardState = JsonSerializer.Serialize(game.Board.Squares),
+            });
             gameFromDb.GameOverAt = game.GameOverAt;
             gameFromDb.GameWonByPlayer = game.GameWonByPlayer;
         }
@@ -101,6 +108,27 @@ public class GameDbRepository : IGameRepository
         return _dbContext.CheckersGames
             .Include(g => g.PlayerOne)
             .Include(g => g.PlayerTwo)
+            .Include(g => g.GameOptions)
+            .Include(g => g.GameStates)
             .FirstOrDefault(b => b.Name == name);
+    }
+
+    private DAL.DTO.CheckersGame? GetDtoByNameWithoutIncludes(string name)
+    {
+        return _dbContext.CheckersGames.FirstOrDefault(b => b.Name == name);
+    }
+
+    private DTO.Player? GetPlayerDtoByName(string name)
+    {
+        return _dbContext.Players.FirstOrDefault(p => p.Name.Equals(name));
+    }
+    
+    private CheckersGameOptions? GetOptionsByOptions(GameOptions options)
+    {
+        return _dbContext.GameOptions
+            .FirstOrDefault(o => o.BoardHeight == options.Height &&
+                                 o.BoardWidth == options.Width &&
+                                 o.CompulsoryJumps == options.CompulsoryJumps &&
+                                 o.PlayerOneStarts == options.PlayerOneStarts);
     }
 }
