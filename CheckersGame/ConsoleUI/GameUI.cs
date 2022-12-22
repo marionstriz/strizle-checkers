@@ -1,6 +1,4 @@
-using System.Security.AccessControl;
 using System.Text;
-using DAL;
 using GameBrain;
 using Board = GameBrain.Board;
 using CheckersGame = GameBrain.CheckersGame;
@@ -32,8 +30,8 @@ public class GameUI
         {
             if (Game.GameWonByPlayer != null)
             {
-                done = true;
                 CelebrateGoodTimesComeOn();
+                break;
             }
             var currentPlayer = Game.PlayerOne.IsCurrent ? Game.PlayerOne : Game.PlayerTwo;
             var movesMap = Game.Board.GetCurrentPossibleMoves(currentPlayer, Game.GameOptions.CompulsoryJumps);
@@ -70,7 +68,12 @@ public class GameUI
 
     private void CelebrateGoodTimesComeOn()
     {
-        _base.AskForInput($"Congratulations, {Game.GameWonByPlayer} has won the game!");
+        Console.Clear();
+        Console.CursorVisible = false;
+        Console.ForegroundColor = _base.MainColor;
+        Console.WriteLine($"Congratulations, {Game.GameWonByPlayer} has won the game!");
+        Console.WriteLine($"Please head to Main Menu to start new game.");
+        Console.ReadKey();
     }
 
     private int? AskForAnyValidSquare(int[] validSquares, int? moveButtonSquare = null)

@@ -135,8 +135,7 @@ public class Board
             if (IsOutsideOfArray(dest)) continue;
             if (!Squares[dest].IsOtherColorButtonSquare(color))
             {
-                if (supermario && !Squares[dest].IsColorButtonSquare(color)
-                               && dest % Width > 1 && dest % Width < Width - 2)
+                if (supermario && !Squares[dest].IsColorButtonSquare(color))
                 {
                     moves = GetJumpMovesFromSquare(sqIndex, color, supermario, 
                         initMultiplier + 1, moves, adds:new[]{add}, wouldBeEaten);

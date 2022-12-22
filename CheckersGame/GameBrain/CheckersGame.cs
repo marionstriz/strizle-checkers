@@ -18,6 +18,7 @@ namespace GameBrain
 
         public CheckersGame(GameOptions gameOptions, string p1Name, string p2Name)
         {
+            if (p1Name.Equals(p2Name)) throw new ArgumentException("Player names cannot be the same");
             GameOptions = gameOptions;
             Board = new Board(gameOptions.Width, gameOptions.Height);
             

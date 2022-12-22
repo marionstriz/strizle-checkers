@@ -33,11 +33,18 @@ public class UIController
 
     public char AskForPlayerNames(GameOptions options, Menu gameMenu)
     {
-        string? p1 = AskForNonBlankInput("Enter name for player 1: ");
+        var p1 = AskForNonBlankInput("Enter name for player 1: ");
         if (p1 == null) return ' ';
-        
-        string? p2 = AskForNonBlankInput("Enter name for player 2: ");
-        
+
+        var p2 = p1;
+        var clearConsole = true;
+        while (p1.Equals(p2))
+        {
+            p2 = AskForNonBlankInput("Enter name for player 2: ", clearConsole);
+            if (p1.Equals(p2)) PrintError("Player names cannot be the same");
+            clearConsole = false;
+        }
+
         return p2 == null ? ' ' : NewGame(options, p1, p2, gameMenu);
     }
 
