@@ -1,0 +1,60 @@
+@page
+@model WebApp.Pages.GameStates.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGameState[0].SerializedBoardState)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGameState[0].PlayerOneIsCurrent)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGameState[0].UpdatedAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGameState[0].CheckersGame)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersGameState[0].SerializedNextMoves)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.CheckersGameState) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.SerializedBoardState)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PlayerOneIsCurrent)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UpdatedAt)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CheckersGame!.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SerializedNextMoves)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

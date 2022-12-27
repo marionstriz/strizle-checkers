@@ -403,3 +403,6 @@ FodyWeavers.xsd
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+**/Saves/**
+**/app.db

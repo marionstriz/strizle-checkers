@@ -7,6 +7,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3EE86308-D65B-41B2-9C0B-03666E5393BF}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
+		..\.gitignore = ..\.gitignore
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleUI", "ConsoleUI\ConsoleUI.csproj", "{AF8B9CF9-F0CF-4017-99FC-0E9678A0B586}"
@@ -21,7 +22,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameBrain", "GameBrain\Game
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL.DTO", "DAL.DTO\DAL.DTO.csproj", "{B2BD159D-3A12-4EBD-8BF6-05B7489E7386}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "WebApp\WebApp.csproj", "{55500E4F-5E9C-44C5-8C23-B569AE7BEBC0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "WebApp\WebApp.csproj", "{0C9DD1DB-C2AA-4A55-9D0B-A2C6CB0F027C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,9 +62,9 @@ Global
 		{B2BD159D-3A12-4EBD-8BF6-05B7489E7386}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2BD159D-3A12-4EBD-8BF6-05B7489E7386}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2BD159D-3A12-4EBD-8BF6-05B7489E7386}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55500E4F-5E9C-44C5-8C23-B569AE7BEBC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55500E4F-5E9C-44C5-8C23-B569AE7BEBC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55500E4F-5E9C-44C5-8C23-B569AE7BEBC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55500E4F-5E9C-44C5-8C23-B569AE7BEBC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C9DD1DB-C2AA-4A55-9D0B-A2C6CB0F027C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C9DD1DB-C2AA-4A55-9D0B-A2C6CB0F027C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C9DD1DB-C2AA-4A55-9D0B-A2C6CB0F027C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C9DD1DB-C2AA-4A55-9D0B-A2C6CB0F027C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
