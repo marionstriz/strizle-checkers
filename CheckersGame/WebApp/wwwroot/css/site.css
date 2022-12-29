@@ -20,3 +20,54 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.game-board-heading {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.game-board-error {
+  text-align: center;
+  color: red;
+}
+
+.game-board {
+  width: initial;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.game-board-square {
+  width: 68px;
+  height: 68px;
+  background-size: 68px;
+}
+
+.movable-square {
+  background-color: gray !important;
+}
+
+.highlighted-square {
+  background-color: greenyellow !important;
+}
+
+.black-button-square {
+  background-image: url('../img/black.png');
+}
+
+.black-king-button-square {
+  background-image: url('../img/black-king.png');
+}
+
+.white-button-square {
+  background-image: url('../img/white.png');
+}
+
+.white-king-button-square {
+  background-image: url('../img/white-king.png');
+}
+
+.game-over-heading {
+  margin-top: 100px;
+  text-align: center;
+}

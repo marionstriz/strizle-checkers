@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using DAL;
 using DAL.DTO;
 
@@ -12,11 +7,11 @@ namespace WebApp.Pages.GameOptions
 {
     public class DeleteModel : PageModel
     {
-        private readonly DAL.AppDbContext _context;
+        private readonly IOptionsDbRepository _optionsRepository;
 
-        public DeleteModel(DAL.AppDbContext context)
+        public DeleteModel(IGameDbRepository gameRepository)
         {
-            _context = context;
+            _optionsRepository = gameRepository.GetOptionsRepository();
         }
 
         [BindProperty]
@@ -24,38 +19,29 @@ namespace WebApp.Pages.GameOptions
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.GameOptions == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var checkersgameoptions = await _context.GameOptions.FirstOrDefaultAsync(m => m.Id == id);
+            var checkersGameOptions = await _optionsRepository.GetByIdAsync(id.Value);
 
-            if (checkersgameoptions == null)
+            if (checkersGameOptions == null)
             {
                 return NotFound();
             }
-            else 
-            {
-                CheckersGameOptions = checkersgameoptions;
-            }
+            CheckersGameOptions = checkersGameOptions;
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null || _context.GameOptions == null)
+            if (id == null)
             {
                 return NotFound();
             }
-            var checkersgameoptions = await _context.GameOptions.FindAsync(id);
 
-            if (checkersgameoptions != null)
-            {
-                CheckersGameOptions = checkersgameoptions;
-                _context.GameOptions.Remove(CheckersGameOptions);
-                await _context.SaveChangesAsync();
-            }
+            await _optionsRepository.DeleteByIdAsync(id.Value);
 
             return RedirectToPage("./Index");
         }

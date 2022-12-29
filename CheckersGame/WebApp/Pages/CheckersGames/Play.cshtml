@@ -1,0 +1,37 @@
+@page
+@model WebApp.Pages.CheckersGames.PlayModel
+
+@{
+    ViewData["Title"] = "Play";
+}
+
+@if (!Model.IsCurrentPlayer())
+{
+    <h2 class="game-board-heading">Please wait for @Model.Opponent.Name to make their move.</h2>
+}
+else
+{
+    <h2 class="game-board-heading">It's your turn! Select a highlighted square.</h2>
+}
+
+<table class="table table-bordered game-board center">
+    @for (var i = 0; i < Model.Game.Board.Height; i++)
+    {
+        <tr>
+            @for (var j = 0; j < Model.Game.Board.Width; j++)
+            {
+                var index = i * Model.Game.Board.Height + j;
+
+                var classes = Model.GetSquareClasses(index);
+                
+                <td class="game-board-square @classes"
+                    @Model.GetOnClickWithIndex(index)>
+                </td>
+            }
+        </tr>
+    }
+</table>
+@if (Model.Error != null)
+{
+    <p class="game-board-error">@Model.Error</p>
+}

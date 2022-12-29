@@ -155,13 +155,13 @@ public class Board
             moves.Add(new Move(sqIndex, jump, dest, nextMoves.Count == 0 ? null : nextMoves));
 
             if (supermario) GetRegularMovesFromSquare(sqIndex, color, supermario, 
-                initMultiplier + 1, moves, adds:new[]{add});
+                initMultiplier + 1, moves, adds:new[]{add}, wouldBeEaten:dest);
         }
         return moves;
     }
 
     private List<Move> GetRegularMovesFromSquare(int sqIndex, EColor color, bool supermario, 
-        int initMultiplier = 1, List<Move>? moves = null, int[]? adds = null)
+        int initMultiplier = 1, List<Move>? moves = null, int[]? adds = null, int? wouldBeEaten = null)
     {
         moves ??= new List<Move>();
         adds ??= GetSquareIndexAdds(color, supermario);
@@ -171,10 +171,10 @@ public class Board
             var dest = sqIndex + add * initMultiplier;
             if (IsUnmovable(sqIndex, dest, color) || Squares[dest].HasButton()) continue;
             
-            moves.Add(new Move(sqIndex, dest));
+            moves.Add(new Move(sqIndex, dest, wouldBeEaten));
 
             if (supermario) moves = GetRegularMovesFromSquare(sqIndex, color, supermario, 
-                initMultiplier + 1, moves, adds:new[]{add});
+                initMultiplier + 1, moves, adds:new[]{add}, wouldBeEaten:wouldBeEaten);
         }
         return moves;
     } 

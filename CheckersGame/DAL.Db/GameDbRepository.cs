@@ -1,21 +1,26 @@
-using System.Security.AccessControl;
-using System.Text.Json;
-using DAL.DTO;
 using GameBrain;
 using Microsoft.EntityFrameworkCore;
 using CheckersGame = GameBrain.CheckersGame;
 
 namespace DAL;
 
-public class GameDbRepository : IGameRepository
+public class GameDbRepository : BaseDbRepository, IGameDbRepository
 {
-    private readonly AppDbContext _dbContext;
     private const ESaveType SaveType = ESaveType.Database;
+    private IStateDbRepository StateRepository { get; }
+    private IPlayerDbRepository PlayerRepository { get; }
+    private IOptionsDbRepository OptionsRepository { get; }
     
-    public GameDbRepository(AppDbContext dbContext)
+    public GameDbRepository(AppDbContext dbContext) : base(dbContext)
     {
-        _dbContext = dbContext;
+        StateRepository = new StateDbRepository(dbContext);
+        PlayerRepository = new PlayerDbRepository(dbContext);
+        OptionsRepository = new OptionsDbRepository(dbContext);
     }
+
+    public IStateDbRepository GetStateRepository() => StateRepository;
+    public IPlayerDbRepository GetPlayerRepository() => PlayerRepository;
+    public IOptionsDbRepository GetOptionsRepository() => OptionsRepository;
 
     public ESaveType GetSaveType() => SaveType;
 
@@ -36,17 +41,71 @@ public class GameDbRepository : IGameRepository
             .ToList();
     }
 
-    public CheckersGame GetGameByName(string name)
+    public async Task<List<DTO.CheckersGame>> GetAllAsync()
     {
-        var dto = GetDtoByName(name);
-        if (dto == null)
+        return await _dbContext.CheckersGames
+            .Include(c => c.GameOptions)
+            .Include(c => c.PlayerOne)
+            .Include(c => c.PlayerTwo)
+            .ToListAsync();
+    }
+
+    public async Task<DTO.CheckersGame?> GetByIdAsync(int id)
+    {
+        return await _dbContext.CheckersGames
+            .Include(g => g.PlayerOne)
+            .Include(g => g.PlayerTwo)
+            .Include(g => g.GameOptions)
+            .Include(g => g.GameStates)
+            .FirstOrDefaultAsync(b => b.Id == id);
+    }
+
+    public async Task<DTO.CheckersGame?> GetByIdLazyAsync(int id)
+    {
+        return await _dbContext.CheckersGames
+            .FirstOrDefaultAsync(b => b.Id == id);
+    }
+ 
+    public async Task DeleteByIdAsync(int id)
+    {
+        var checkersGame = await _dbContext.CheckersGames.FindAsync(id);
+
+        if (checkersGame != null)
         {
-            throw new ArgumentException($"No game with name {name} found in database.");
+            _dbContext.CheckersGames.Remove(checkersGame);
+            await _dbContext.SaveChangesAsync();
         }
+    }
+
+    public CheckersGame? GetBrainGameByName(string name)
+    {
+        var dto = GetByName(name);
+        if (dto == null) return null;
         return new CheckersGame(dto, SaveType);
     }
 
-    public void SaveGame(CheckersGame game, string name)
+    public void SaveBrainGameByName(CheckersGame game, string name)
+    {
+        SaveBrainGameByNameAsync(game, name).Wait();
+    }
+
+    public async Task AddAsync(DTO.CheckersGame game)
+    {
+        await _dbContext.CheckersGames.AddAsync(game);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task SaveBrainGameAsync(CheckersGame game)
+    {
+        if (game.SaveOptions == null || !game.SaveOptions.SaveType.Equals(ESaveType.Database))
+        {
+            throw new ArgumentException(
+                "Cannot save game with incorrect save options to database. Please use Name method.");
+        }
+        await SaveBrainGameByNameAsync(game, game.SaveOptions!.Name);
+    }
+
+    public async Task SaveBrainGameByNameAsync(CheckersGame game, string name)
     {
         var ogName = game.SaveOptions?.Name;
         var ogSaveType = game.SaveOptions?.SaveType;
@@ -57,14 +116,14 @@ public class GameDbRepository : IGameRepository
             game.SaveOptions = new SaveOptions(name, SaveType);
         }
         
-        var gameFromDb = GetDtoByNameWithoutIncludes(name);
+        var gameFromDb = GetByNameLazyAsync(name).Result;
         
         if (gameFromDb == null)
         {
             DAL.DTO.CheckersGame newGame = game.ToDto();
-            var playerOne = GetPlayerDtoByName(game.PlayerOne.Name);
-            var playerTwo = GetPlayerDtoByName(game.PlayerTwo.Name);
-            var options = GetOptionsByOptions(game.GameOptions);
+            var playerOne = await PlayerRepository.GetByNameLazyAsync(game.PlayerOne.Name);
+            var playerTwo = await PlayerRepository.GetByNameLazyAsync(game.PlayerTwo.Name);
+            var options = await OptionsRepository.GetByOptionsAsync(game.GameOptions);
 
             if (playerOne != null) newGame.PlayerOneId = playerOne.Id;
             else newGame.PlayerOne = new DTO.Player {Name = game.PlayerOne.Name};
@@ -74,24 +133,28 @@ public class GameDbRepository : IGameRepository
 
             if (options != null) newGame.GameOptionsId = options.Id;
             else newGame.GameOptions = game.GameOptions.ToDto();
-            
-            _dbContext.CheckersGames.Add(newGame);
+
+            await AddAsync(newGame);
+            game.GameStates.ForEach(s => s.CheckersGameId = newGame.Id);
+            game.Id = newGame.Id;
         }
         else
         {
-            _dbContext.GameStates.Add(new CheckersGameState
-            {
-                CheckersGameId = gameFromDb.Id,
-                PlayerOneIsCurrent = game.PlayerOne.IsCurrent,
-                SerializedBoardState = JsonSerializer.Serialize(game.Board.Squares),
-            });
+            game.Id ??= gameFromDb.Id;
+            gameFromDb.GameStates = game.GameStates;
             gameFromDb.GameOverAt = game.GameOverAt;
             gameFromDb.GameWonByPlayer = game.GameWonByPlayer;
         }
-        _dbContext.SaveChanges();
+        await _dbContext.SaveChangesAsync();
+    }
+    
+    public async Task SaveAsync(DTO.CheckersGame game)
+    {
+        _dbContext.Attach(game).State = EntityState.Modified; 
+        await _dbContext.SaveChangesAsync();
     }
 
-    public void DeleteGame(string name)
+    public void DeleteByName(string name)
     {
         var gameFromDb = _dbContext.CheckersGames
             .FirstOrDefault(g => g.Name == name);
@@ -102,8 +165,14 @@ public class GameDbRepository : IGameRepository
         _dbContext.CheckersGames.Remove(gameFromDb);
         _dbContext.SaveChanges();
     }
+    
+    public async Task<DTO.CheckersGame?> GetByNameLazyAsync(string name)
+    {
+        return await _dbContext.CheckersGames
+            .FirstOrDefaultAsync(p => p.Name.Equals(name));
+    }
 
-    private DAL.DTO.CheckersGame? GetDtoByName(string name)
+    private DAL.DTO.CheckersGame? GetByName(string name)
     {
         return _dbContext.CheckersGames
             .Include(g => g.PlayerOne)
@@ -111,24 +180,5 @@ public class GameDbRepository : IGameRepository
             .Include(g => g.GameOptions)
             .Include(g => g.GameStates)
             .FirstOrDefault(b => b.Name == name);
-    }
-
-    private DAL.DTO.CheckersGame? GetDtoByNameWithoutIncludes(string name)
-    {
-        return _dbContext.CheckersGames.FirstOrDefault(b => b.Name == name);
-    }
-
-    private DTO.Player? GetPlayerDtoByName(string name)
-    {
-        return _dbContext.Players.FirstOrDefault(p => p.Name.Equals(name));
-    }
-    
-    private CheckersGameOptions? GetOptionsByOptions(GameOptions options)
-    {
-        return _dbContext.GameOptions
-            .FirstOrDefault(o => o.BoardHeight == options.Height &&
-                                 o.BoardWidth == options.Width &&
-                                 o.CompulsoryJumps == options.CompulsoryJumps &&
-                                 o.PlayerOneStarts == options.PlayerOneStarts);
     }
 }

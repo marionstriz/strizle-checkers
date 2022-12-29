@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using DAL;
 using DAL.DTO;
 
@@ -12,50 +7,41 @@ namespace WebApp.Pages.Players
 {
     public class DeleteModel : PageModel
     {
-        private readonly DAL.AppDbContext _context;
+        private readonly IPlayerDbRepository _playerRepository;
 
-        public DeleteModel(DAL.AppDbContext context)
+        public DeleteModel(IGameDbRepository gameDbRepository)
         {
-            _context = context;
+            _playerRepository = gameDbRepository.GetPlayerRepository();
         }
 
-        [BindProperty]
-      public Player Player { get; set; } = default!;
+        [BindProperty] 
+        public Player Player { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Players == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var player = await _context.Players.FirstOrDefaultAsync(m => m.Id == id);
+            var player = await _playerRepository.GetByIdAsync(id.Value);
 
             if (player == null)
             {
                 return NotFound();
             }
-            else 
-            {
-                Player = player;
-            }
+            Player = player;
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null || _context.Players == null)
+            if (id == null)
             {
                 return NotFound();
             }
-            var player = await _context.Players.FindAsync(id);
 
-            if (player != null)
-            {
-                Player = player;
-                _context.Players.Remove(Player);
-                await _context.SaveChangesAsync();
-            }
+            await _playerRepository.DeleteByIdAsync(id.Value);
 
             return RedirectToPage("./Index");
         }

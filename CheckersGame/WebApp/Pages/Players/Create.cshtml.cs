@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using DAL;
 using DAL.DTO;
 
@@ -12,11 +7,11 @@ namespace WebApp.Pages.Players
 {
     public class CreateModel : PageModel
     {
-        private readonly DAL.AppDbContext _context;
-
-        public CreateModel(DAL.AppDbContext context)
+        private readonly IPlayerDbRepository _playerRepository;
+        
+        public CreateModel(IGameDbRepository gameDbRepository)
         {
-            _context = context;
+            _playerRepository = gameDbRepository.GetPlayerRepository();
         }
 
         public IActionResult OnGet()
@@ -30,14 +25,17 @@ namespace WebApp.Pages.Players
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
         public async Task<IActionResult> OnPostAsync()
-        {
-          if (!ModelState.IsValid || _context.Players == null || Player == null)
+        { 
+            if (await _playerRepository.GetByNameLazyAsync(Player.Name) != null)
+            {
+                ModelState.AddModelError("unique-name", "Name must be unique");
+            }
+            if (!ModelState.IsValid)
             {
                 return Page();
             }
-
-            _context.Players.Add(Player);
-            await _context.SaveChangesAsync();
+            
+            await _playerRepository.AddAsync(Player);
 
             return RedirectToPage("./Index");
         }

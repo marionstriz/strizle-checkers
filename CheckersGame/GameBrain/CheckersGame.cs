@@ -1,20 +1,21 @@
-﻿using System.Security.AccessControl;
-using System.Text.Json;
+﻿using System.Text.Json;
 using DAL.DTO;
 
 namespace GameBrain
 {
     public class CheckersGame
     {
+        public int? Id { get; set; }
         public SaveOptions? SaveOptions { get; set; }
         public GameOptions GameOptions { get; }
         public Board Board { get; }
         public Player PlayerOne { get; }
         public Player PlayerTwo { get; }
-        public DateTime StartedAt { get; } = DateTime.Now.ToUniversalTime();
+        private DateTime StartedAt { get; } = DateTime.UtcNow;
         public DateTime? GameOverAt { get; set; }
         public string? GameWonByPlayer { get; set; }
         public List<Move>? NextMoves { get; set; }
+        public List<CheckersGameState> GameStates { get; } = new();
 
         public CheckersGame(GameOptions gameOptions, string p1Name, string p2Name)
         {
@@ -26,6 +27,7 @@ namespace GameBrain
                 Board.CountButtonsWithColor(EColor.White));
             PlayerTwo = new Player(p2Name, EColor.Black, !gameOptions.PlayerOneStarts, 
                 Board.CountButtonsWithColor(EColor.Black));
+            AddCurrentGameStateToList();
         }
 
         public CheckersGame(DAL.DTO.CheckersGame dto, ESaveType saveType)
@@ -35,7 +37,10 @@ namespace GameBrain
                 throw new ArgumentException(
                     "Unable to initialize game from DTO - please ensure all related entities are queried.");
             }
-            var latestState = dto.GameStates.OrderByDescending(s => s.UpdatedAt).First();
+            Id = dto.Id;
+            GameStates = dto.GameStates.OrderBy(s => s.UpdatedAt).ToList();
+            var latestState = GameStates.Last();
+                
             SaveOptions = new SaveOptions(dto.Name, saveType);
             
             GameOptions = new GameOptions{
@@ -60,6 +65,16 @@ namespace GameBrain
 
             if (latestState.SerializedNextMoves != null) 
                 NextMoves = JsonSerializer.Deserialize<List<Move>>(latestState.SerializedNextMoves);
+        }
+
+        public Dictionary<int, List<Move>> GetCurrentPlayerMoves()
+        {
+            return Board.GetCurrentPossibleMoves(GetCurrentTurnPlayer(), GameOptions.CompulsoryJumps);
+        }
+
+        public Player GetCurrentTurnPlayer()
+        {
+            return PlayerOne.IsCurrent ? PlayerOne : PlayerTwo;
         }
 
         private void SwapPlayerTurn()
@@ -91,6 +106,19 @@ namespace GameBrain
             else if (NextMoves != null) NextMoves = null;
             if (move.WithEdibleSquare != null) EatPlayerButton(Board.Squares[move.WithEdibleSquare.Value]);
             if (NextMoves == null) SwapPlayerTurn();
+            AddCurrentGameStateToList();
+        }
+
+        private void AddCurrentGameStateToList()
+        {
+            var state = new CheckersGameState
+            {
+                SerializedBoardState = JsonSerializer.Serialize(Board.Squares),
+                SerializedNextMoves = NextMoves != null ? JsonSerializer.Serialize(NextMoves) : null,
+                PlayerOneIsCurrent = PlayerOne.IsCurrent,
+            };
+            if (Id != null) state.CheckersGameId = Id.Value;
+            GameStates.Add(state);
         }
 
         private void EatPlayerButton(Square edible)
@@ -118,13 +146,10 @@ namespace GameBrain
                 StartedAt = StartedAt,
                 GameOverAt = GameOverAt,
                 GameWonByPlayer = GameWonByPlayer,
-                GameStates = new List<CheckersGameState>{new() {
-                    SerializedBoardState = JsonSerializer.Serialize(Board.Squares),
-                    PlayerOneIsCurrent = PlayerOne.IsCurrent,
-                    SerializedNextMoves = NextMoves != null ? JsonSerializer.Serialize(NextMoves) : null
-                }},
+                GameStates = GameStates,
                 PlayerOneColor = PlayerOne.Color
             };
+            if (Id != null) dBrain.Id = Id.Value;
             return dBrain;
         }
 

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using DAL.DTO;
 using GameBrain;
 using CheckersGame = GameBrain.CheckersGame;
 
@@ -18,7 +17,7 @@ namespace DAL.FileSystem
 
         public ESaveType GetSaveType() => SaveType;
 
-        public CheckersGame GetGameByName(string name)
+        public CheckersGame GetBrainGameByName(string name)
         {
             var fileContent = File.ReadAllText(GetFileName(name));
             var gameDto = JsonSerializer.Deserialize<DAL.DTO.CheckersGame>(fileContent);
@@ -29,7 +28,7 @@ namespace DAL.FileSystem
             return new CheckersGame(gameDto, SaveType);
         }
 
-        public void SaveGame(CheckersGame game, string name)
+        public void SaveBrainGameByName(CheckersGame game, string name)
         {
             CheckOrCreateDirectory();
             if (game.SaveOptions == null
@@ -44,7 +43,7 @@ namespace DAL.FileSystem
             File.WriteAllText(GetFileName(name), fileContent);
         }
 
-        public void DeleteGame(string name)
+        public void DeleteByName(string name)
         {
             File.Delete(GetFileName(name));
         }
@@ -65,14 +64,14 @@ namespace DAL.FileSystem
         private List<string> GetListFromGameSaveFiles(Predicate<string> p)
         {
             CheckOrCreateDirectory();
-            var res = new List<string>();
             var jsonFiles = Directory.GetFileSystemEntries(_brainsDirectory, "*." + FileExtension);
-            foreach (var file in jsonFiles)
-            {
-                var fileName = Path.GetFileNameWithoutExtension(file);
-                if (p.Invoke(fileName)) res.Add(fileName);
-            }
-            res = res.Order().ToList();
+            
+            var res = jsonFiles
+                .Select(file => Path.GetFileNameWithoutExtension(file))
+                .Where(fileName => p.Invoke(fileName))
+                .Order()
+                .ToList();
+            
             return res;
         }
     }

@@ -12,21 +12,17 @@ namespace WebApp.Pages.Players
 {
     public class IndexModel : PageModel
     {
-        private readonly DAL.AppDbContext _context;
-
-        public IndexModel(DAL.AppDbContext context)
+        private readonly IPlayerDbRepository _playerRepository;
+        
+        public IndexModel(IGameDbRepository gameDbRepository)
         {
-            _context = context;
+            _playerRepository = gameDbRepository.GetPlayerRepository();
         }
-
         public IList<Player> Player { get;set; } = default!;
 
         public async Task OnGetAsync()
         {
-            if (_context.Players != null)
-            {
-                Player = await _context.Players.ToListAsync();
-            }
+            Player = await _playerRepository.GetAllAsync();
         }
     }
 }

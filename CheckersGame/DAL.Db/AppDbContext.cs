@@ -1,6 +1,5 @@
 using DAL.DTO;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace DAL;
 
@@ -14,5 +13,12 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<CheckersGame>().HasIndex(g => g.Name).IsUnique();
+        modelBuilder.Entity<Player>().HasIndex(g => g.Name).IsUnique();
     }
 }

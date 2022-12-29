@@ -12,11 +12,11 @@ namespace WebApp.Pages.CheckersGames
 {
     public class DeleteModel : PageModel
     {
-        private readonly DAL.AppDbContext _context;
+        private readonly IGameDbRepository _repository;
 
-        public DeleteModel(DAL.AppDbContext context)
+        public DeleteModel(IGameDbRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         [BindProperty]
@@ -24,38 +24,28 @@ namespace WebApp.Pages.CheckersGames
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.CheckersGames == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var checkersgame = await _context.CheckersGames.FirstOrDefaultAsync(m => m.Id == id);
+            var checkersGame = await _repository.GetByIdAsync(id.Value);
 
-            if (checkersgame == null)
+            if (checkersGame == null)
             {
                 return NotFound();
             }
-            else 
-            {
-                CheckersGame = checkersgame;
-            }
+            CheckersGame = checkersGame;
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null || _context.CheckersGames == null)
+            if (id == null)
             {
                 return NotFound();
             }
-            var checkersgame = await _context.CheckersGames.FindAsync(id);
-
-            if (checkersgame != null)
-            {
-                CheckersGame = checkersgame;
-                _context.CheckersGames.Remove(CheckersGame);
-                await _context.SaveChangesAsync();
-            }
+            await _repository.DeleteByIdAsync(id.Value);
 
             return RedirectToPage("./Index");
         }

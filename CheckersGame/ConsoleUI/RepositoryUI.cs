@@ -1,5 +1,4 @@
 using DAL;
-using GameBrain;
 using MenuSystem;
 
 namespace ConsoleUI;
@@ -41,7 +40,7 @@ public class RepositoryUI
             _base.PrintMenuError($"Save with name '{name}' already exists.");
             return ' ';
         }
-        Repository.SaveGame(_base.GetBrain()!, name);
+        Repository.SaveBrainGameByName(_base.GetBrain()!, name);
         _base.PrintSuccess($"Game saved to {Repository.GetSaveType().ToString()} with name '{name}'");
         return newGame ? 'R' : ' ';
     }
@@ -61,7 +60,7 @@ public class RepositoryUI
     
     private char DeleteSave(string fileName, Menu loadMenu)
     {
-        Repository.DeleteGame(fileName);
+        Repository.DeleteByName(fileName);
         loadMenu.RemoveMenuItemByTitle(fileName);
         _base.PrintSuccess($"Game '{fileName}' deleted.");
         return 'R';
@@ -72,7 +71,7 @@ public class RepositoryUI
         Console.WriteLine("in file options menu");
         var fileActionsMenu = new Menu(EMenuLevel.MoreThanSecond, "File Options", new List<MenuItem>
         {
-            new('S', "Start", () => _base.LoadGame(Repository.GetGameByName(fileName), gameMenu)),
+            new('S', "Start", () => _base.LoadGame(Repository.GetBrainGameByName(fileName)!, gameMenu)),
             new ('D', "Delete", () => DeleteSave(fileName, loadMenu))
         });
         return _base.MenuUI.RunMenuForUserInput(fileActionsMenu);

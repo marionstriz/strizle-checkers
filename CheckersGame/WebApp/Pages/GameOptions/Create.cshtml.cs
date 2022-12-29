@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using DAL;
 using DAL.DTO;
 
@@ -12,11 +7,11 @@ namespace WebApp.Pages.GameOptions
 {
     public class CreateModel : PageModel
     {
-        private readonly DAL.AppDbContext _context;
+        private readonly IOptionsDbRepository _optionsRepository;
 
-        public CreateModel(DAL.AppDbContext context)
+        public CreateModel(IGameDbRepository gameRepository)
         {
-            _context = context;
+            _optionsRepository = gameRepository.GetOptionsRepository();
         }
 
         public IActionResult OnGet()
@@ -30,15 +25,14 @@ namespace WebApp.Pages.GameOptions
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
         public async Task<IActionResult> OnPostAsync()
-        {
-          if (!ModelState.IsValid || _context.GameOptions == null || CheckersGameOptions == null)
+        { 
+            if (!ModelState.IsValid)
             {
                 return Page();
             }
-
-            _context.GameOptions.Add(CheckersGameOptions);
-            await _context.SaveChangesAsync();
-
+            
+            await _optionsRepository.AddAsync(CheckersGameOptions);
+            
             return RedirectToPage("./Index");
         }
     }

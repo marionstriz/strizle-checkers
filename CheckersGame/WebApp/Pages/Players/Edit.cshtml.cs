@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DAL;
 using DAL.DTO;
@@ -13,11 +8,11 @@ namespace WebApp.Pages.Players
 {
     public class EditModel : PageModel
     {
-        private readonly DAL.AppDbContext _context;
+        private readonly IPlayerDbRepository _playerRepository;
 
-        public EditModel(DAL.AppDbContext context)
+        public EditModel(IGameDbRepository gameDbRepository)
         {
-            _context = context;
+            _playerRepository = gameDbRepository.GetPlayerRepository();
         }
 
         [BindProperty]
@@ -25,12 +20,12 @@ namespace WebApp.Pages.Players
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Players == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var player =  await _context.Players.FirstOrDefaultAsync(m => m.Id == id);
+            var player = await _playerRepository.GetByIdAsync(id.Value);
             if (player == null)
             {
                 return NotFound();
@@ -47,31 +42,20 @@ namespace WebApp.Pages.Players
             {
                 return Page();
             }
-
-            _context.Attach(Player).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _playerRepository.SaveAsync(Player);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!PlayerExists(Player.Id))
+                if (await _playerRepository.GetByIdAsync(Player.Id) == null)
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return RedirectToPage("./Index");
-        }
-
-        private bool PlayerExists(int id)
-        {
-          return (_context.Players?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

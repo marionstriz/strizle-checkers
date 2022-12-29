@@ -21,4 +21,12 @@
       <ProjectReference Include="..\DAL.Db\DAL.Db.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Pages\GameStates\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\GameStates\Delete.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\GameStates\Details.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\GameStates\Edit.cshtml" />
+      <_ContentIncludedByDefault Remove="Pages\GameStates\Index.cshtml" />
+    </ItemGroup>
+
 </Project>
